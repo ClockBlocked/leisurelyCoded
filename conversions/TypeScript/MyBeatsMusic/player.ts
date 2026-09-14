@@ -2,9 +2,9 @@
    player.ts — Audio engine, player state, and player UI
    ============================================================ */
 
-import { Config, Utils, IdUtils, Icons } from './core';
-import type { PlayerState as _PlayerState } from './types';
-import type { RepeatMode, Song, PlaySource, Playlist } from './types';
+import { Config, Utils, IdUtils, Icons } from 'https://mybeats.cloud/core/base.ts';
+import type { PlayerState as _PlayerState } from 'https://mybeats.cloud/core/types.ts';
+import type { RepeatMode, Song, PlaySource, Playlist } from 'https://mybeats.cloud/core/types.ts';
 
 const AUDIO_CDN_BASE = 'https://pub-54216af4fb1549ff95a6cb5f8d63fe2d.r2.dev';
 
