@@ -1,14 +1,13 @@
-/* ============================================================
-   globals.d.ts — Window augmentation for MyBeats globals
-   ============================================================ */
 
-import type { Prefs } from './core';
-import type { ColorExtractor } from './core';
+
+
+
+
+import type { Prefs, ColorExtractor, PersistenceManager, NProgress, Utils } from './core';
 import type { PlayerState, AudioEngine, MediaSessionManager } from './player';
 import type { PopupsManager, FavoritesPlaylistsManager, HeartButtonManager } from './interactions';
 import type { UIManager, ContextMenu, OfflineCache } from './builder';
-import type { PersistenceManager } from './core';
-import type { Artist, Playlist, Song } from './types';
+import type { Artist, Song, PlaySource } from './types';
 
 declare global {
   interface Window {
@@ -25,8 +24,8 @@ declare global {
     mediaSessionManager: MediaSessionManager;
     uiManager: UIManager;
     metadata: Artist[];
-    NProgress: typeof import('./core').NProgress;
-    Utils: typeof import('./core').Utils;
+    NProgress: typeof NProgress;
+    Utils: typeof Utils;
     closeModal: () => void;
     createNewPlaylist: () => void;
     renamePlaylist: (id: string, name?: string) => void;
@@ -41,8 +40,8 @@ declare global {
     saveDrawer: Window['saveToLibraryDrawer'];
     pagesActions: {
       buildSongs: () => Song[];
-      playQueue: (queue: Song[], index?: number, label?: string, source?: string | null) => void;
-      playSong: (songId: string, source?: string | null) => void;
+      playQueue: (queue: Song[], index?: number, label?: string, source?: PlaySource | null) => void;
+      playSong: (songId: string, source?: PlaySource | null) => void;
       shuffleAll: () => void;
       playGenre: (genre: string) => void;
       playMood: (mood: string) => void;
@@ -50,9 +49,17 @@ declare global {
       goHome: () => void;
       playAlbum: (artistId: string, albumId: string) => void;
       shuffleAlbum: (artistId: string, albumId: string) => void;
+      openGenre: (genre: string) => void;
     };
-    libraryPage?: { playArtist: (id: string) => void };
-    playlistsPage?: { viewPlaylist: (name: string | null) => void; showMenu?: (e: MouseEvent, id: string) => void };
+    libraryPage?: {
+      playArtist: (id: string) => void;
+      view: string;
+      filter: unknown;
+    };
+    playlistsPage?: {
+      viewPlaylist: (name: string | null) => void;
+      showMenu?: (e: MouseEvent, id: string) => void;
+    };
     showToast?: (message: string, type?: string, duration?: number) => void;
   }
 
