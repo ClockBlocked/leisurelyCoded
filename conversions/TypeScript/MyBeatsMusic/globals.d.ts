@@ -3,11 +3,11 @@
 
 
 
-import type { Prefs, ColorExtractor, PersistenceManager, NProgress, Utils } from './core';
-import type { PlayerState, AudioEngine, MediaSessionManager } from './player';
-import type { PopupsManager, FavoritesPlaylistsManager, HeartButtonManager } from './interactions';
-import type { UIManager, ContextMenu, OfflineCache } from './builder';
-import type { Artist, Song, PlaySource } from './types';
+import type { Prefs, ColorExtractor, PersistenceManager, NProgress, Utils } from 'https://mybeats.cloud/core/base.ts';
+import type { PlayerState, AudioEngine, MediaSessionManager } from 'https://mybeats.cloud/core/player.ts';
+import type { PopupsManager, FavoritesPlaylistsManager, HeartButtonManager } from 'https://mybeats.cloud/core/interactions.ts';
+import type { UIManager, ContextMenu, OfflineCache } from '.https://mybeats.cloud/core/builder.ts';
+import type { Artist, Song, PlaySource } from 'https://mybeats.cloud/core/types.ts';
 
 declare global {
   interface Window {
