@@ -3,24 +3,21 @@
 
 
 
-/* ============================================================
-   layouts.ts — Page renderers
-   ============================================================ */
-
-import { Config, Utils, IdUtils, Icons } from './core';
-import type { PlayerState } from './player';
-import type { UIManager } from './builder';
+import { Config, Utils, IdUtils, Icons } from 'https://mybeats.cloud/core/base.ts';
+import type { PlayerState } from 'https://mybeats.cloud/core/player.ts';
+import type { UIManager } from 'https://mybeats.cloud/core/builder.ts';
 import type {
   Artist, Song, Playlist, Album,
   EnrichedAlbum, EnrichedArtistLite, GenreEntry,
   LibraryView, LibrarySort, LibraryMode, LibraryFilter,
   LibraryFilterType, FavoritesTab, HeartType, PageType,
-} from './types';
+} from 'https://mybeats.cloud/core/types.ts';
 
-/* ============================================================
-   Home
-   ============================================================ */
 
+
+/*≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈
+   H O M E —  P A G E
+≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈*/
 export class Home {
   ui: UIManager;
   RECENT_LIMIT = 15;
@@ -1059,10 +1056,13 @@ export class Home {
   }
 }
 
-/* ============================================================
-   Library
-   ============================================================ */
 
+
+
+
+/*≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈
+   L I B R A R Y  ( "Discover"  /  "My" Library )
+≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈*/
 export class Library {
   ui: UIManager;
   view: LibraryView = 'overview';
@@ -1779,10 +1779,13 @@ export class Library {
   }
 }
 
-/* ============================================================
-   Favorites
-   ============================================================ */
 
+
+
+
+/*≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈
+   F A V O R I T E S
+≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈*/
 export class Favorites {
   ui: UIManager;
   constructor(ui: UIManager) { this.ui = ui; }
