@@ -1,0 +1,264 @@
+
+
+
+
+
+      html {
+        scroll-behavior: smooth;
+      }
+      body {
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+      .hide-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+      .hide-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+
+      /* ---------- Toggle ---------- */
+      .toggle-checkbox {
+        position: absolute;
+        opacity: 0;
+      }
+      .toggle-label {
+        width: 3.25rem;
+        height: 1.75rem;
+        background-color: #e5e7eb;
+        border-radius: 9999px;
+        position: relative;
+        cursor: pointer;
+        transition: background-color 0.3s;
+      }
+      .toggle-label::after {
+        content: "";
+        position: absolute;
+        top: 0.125rem;
+        left: 0.125rem;
+        width: 1.5rem;
+        height: 1.5rem;
+        background-color: #fff;
+        border-radius: 50%;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        transition: transform 0.3s;
+      }
+      .toggle-checkbox:checked + .toggle-label {
+        background-color: #6b4eff;
+      }
+      .toggle-checkbox:checked + .toggle-label::after {
+        transform: translateX(1.5rem);
+      }
+
+      /* ---------- Range ---------- */
+      input[type="range"] {
+        -webkit-appearance: none;
+        width: 100%;
+        background: transparent;
+      }
+      input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        height: 18px;
+        width: 18px;
+        border-radius: 50%;
+        background: #6b4eff;
+        cursor: pointer;
+        margin-top: -7px;
+        box-shadow:
+          0 0 0 4px rgba(107, 78, 255, 0.15),
+          0 2px 6px rgba(107, 78, 255, 0.5);
+        transition: transform 0.15s;
+      }
+      input[type="range"]::-webkit-slider-thumb:active {
+        transform: scale(1.15);
+      }
+      input[type="range"]::-webkit-slider-runnable-track {
+        width: 100%;
+        height: 4px;
+        cursor: pointer;
+        background: #e5e7eb;
+        border-radius: 2px;
+      }
+      input[type="range"]::-moz-range-thumb {
+        height: 18px;
+        width: 18px;
+        border: none;
+        border-radius: 50%;
+        background: #6b4eff;
+        cursor: pointer;
+      }
+      input[type="range"]::-moz-range-track {
+        height: 4px;
+        background: #e5e7eb;
+        border-radius: 2px;
+      }
+
+      /* ---------- Glass ---------- */
+      .glass-panel {
+        background: rgba(255, 255, 255, 0.72);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.5);
+      }
+
+      /* =========================================================
+     GitHub Dark Dimmed — Syntax Highlighting
+     ========================================================= */
+      .gh-code {
+        background: #22272e;
+        color: #adbac7;
+        font-family: "JetBrains Mono", ui-monospace, monospace;
+        font-size: 12.5px;
+        line-height: 1.75;
+        tab-size: 2;
+      }
+      .gh-code .tok-com {
+        color: #768390;
+        font-style: italic;
+      }
+      .gh-code .tok-kw {
+        color: #f47067;
+      }
+      .gh-code .tok-str {
+        color: #96d0ff;
+      }
+      .gh-code .tok-fn {
+        color: #dcbdfb;
+      }
+      .gh-code .tok-num {
+        color: #6cb6ff;
+      }
+      .gh-code .tok-var {
+        color: #f69d50;
+      }
+      .gh-code .tok-tag {
+        color: #8ddb8c;
+      }
+      .gh-code .tok-attr {
+        color: #6cb6ff;
+      }
+      .gh-code .tok-const {
+        color: #6cb6ff;
+      }
+      .gh-code .tok-type {
+        color: #f47067;
+      }
+      .gh-code .tok-punc {
+        color: #768390;
+      }
+      .gh-code .tok-prop {
+        color: #96d0ff;
+      }
+      .gh-code .tok-bool {
+        color: #6cb6ff;
+      }
+      .gh-code .tok-ok {
+        color: #8ddb8c;
+      }
+      .gh-code .tok-warn {
+        color: #c69026;
+      }
+
+      .gh-scroll::-webkit-scrollbar {
+        height: 8px;
+        width: 8px;
+      }
+      .gh-scroll::-webkit-scrollbar-track {
+        background: #2d333b;
+      }
+      .gh-scroll::-webkit-scrollbar-thumb {
+        background: #444c56;
+        border-radius: 8px;
+      }
+      .gh-scroll::-webkit-scrollbar-thumb:hover {
+        background: #545d68;
+      }
+
+      /* ---------- Floating video ---------- */
+      #videoWrap {
+        transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      .video-floating {
+        position: fixed !important;
+        right: 1.5rem;
+        bottom: 1.5rem;
+        width: 22rem;
+        max-width: calc(100vw - 3rem);
+        z-index: 90;
+        box-shadow: 0 30px 70px -15px rgba(0, 0, 0, 0.45);
+        border-radius: 1.25rem;
+        overflow: hidden;
+        animation: popIn 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      @keyframes popIn {
+        from {
+          opacity: 0;
+          transform: translateY(16px) scale(0.96);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
+
+      /* ---------- Misc animations ---------- */
+      @keyframes shimmer {
+        100% {
+          transform: translateX(100%);
+        }
+      }
+      .shimmer::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(255, 255, 255, 0.55),
+          transparent
+        );
+        transform: translateX(-100%);
+        animation: shimmer 1.6s infinite;
+      }
+      @keyframes toastIn {
+        from {
+          opacity: 0;
+          transform: translateX(24px) scale(0.96);
+        }
+        to {
+          opacity: 1;
+          transform: translateX(0) scale(1);
+        }
+      }
+      .toast-in {
+        animation: toastIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      @keyframes toastOut {
+        to {
+          opacity: 0;
+          transform: translateX(24px) scale(0.96);
+        }
+      }
+      .toast-out {
+        animation: toastOut 0.25s ease forwards;
+      }
+
+      @keyframes fadeUp {
+        from {
+          opacity: 0;
+          transform: translateY(8px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .fade-up {
+        animation: fadeUp 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      /* ---------- Selection ---------- */
+      ::selection {
+        background: rgba(107, 78, 255, 0.25);
+      }
