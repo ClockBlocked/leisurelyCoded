@@ -44,8 +44,14 @@
   }
 </script>
 
-<!-- Preline UI JS (plugins: dropdown, tooltip, accordion, overlay, select, tabs, collapse, scrollspy...) -->
 <script src="https://cdn.jsdelivr.net/npm/preline@2.0.3/dist/preline.min.js" defer></script>
+<script defer>
+  document.addEventListener('DOMContentLoaded', () => {
+    if (window.HSStaticMethods) {
+      window.HSStaticMethods.autoInit();
+    }
+  });
+</script>
 <link rel="stylesheet" href="https://clockblocked.github.io/leisurelyCoded/movies/style.css"/>
 </head>
 
