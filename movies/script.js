@@ -114,7 +114,7 @@
       id: 'v01',
       title: 'Basic how to ride your skateboard comfortably',
       description: 'In this beginner-friendly session we break down stance, foot placement, pushing technique and the small balance drills that make everything else click. Practise each drill for five minutes before moving on — repetition beats theory every single time.',
-      src: 'https://player.vimeo.com/external/436572488.sd.mp4?s=eae5fb490e214deb9ff532dd98d101efe94e7a8b&profile_id=139&oauth2_token_id=57447761',
+      src: 'https://pub-96789678a92c479d85e59ff13f0cd4fe.r2.dev/00032.mp4',
       poster: 'https://images.unsplash.com/photo-1547447134-cd3f5c716030?ixlib=rb-1.2.1&auto=format&fit=crop&w=1200&q=80',
       duration: 486,
       views: 54210,
