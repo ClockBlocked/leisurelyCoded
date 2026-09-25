@@ -674,7 +674,7 @@ html[data-theme="light"] .toolbar { background: linear-gradient(to bottom, var(-
   position: fixed; inset: 0; z-index: var(--z-theater);
   background: rgba(12,11,20,.92);
   backdrop-filter: blur(22px);
-  display: none;
+/*  display: none;*/
   overflow-y: auto;
   overscroll-behavior: contain;
 }
