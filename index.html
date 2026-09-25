@@ -1,0 +1,1983 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Elegant Web Components — Preline-style UI Library</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ["Inter", "sans-serif"],
+              mono: ["JetBrains Mono", "monospace"],
+            },
+            colors: {
+              primary: "#6b4eff",
+              primaryDark: "#5a3ee0",
+              background: "#f1f3f7",
+              card: "#ffffff",
+              dark: "#1a1b26",
+              gh: {
+                bg: "#22272e",
+                bg2: "#2d333b",
+                border: "#444c56",
+                fg: "#adbac7",
+                muted: "#768390",
+              },
+            },
+            boxShadow: {
+              soft: "0 10px 40px -10px rgba(0,0,0,0.08)",
+              glow: "0 8px 20px -6px rgba(107, 78, 255, 0.45)",
+              "glow-dark": "0 8px 20px -6px rgba(0, 0, 0, 0.4)",
+              pop: "0 20px 60px -12px rgba(16,24,40,0.22)",
+            },
+          },
+        },
+      };
+    </script>
+   
+  </head>
+
+  <body class="bg-background font-sans text-gray-900 antialiased min-h-screen">
+    <!-- ============================================================
+     TOAST CONTAINER
+     ============================================================ -->
+    <div
+      id="toastContainer"
+      class="fixed top-5 right-5 z-[120] flex flex-col gap-3 w-[min(360px,calc(100vw-2.5rem))] pointer-events-none"
+    ></div>
+
+    <!-- ============================================================
+     HEADER
+     ============================================================ -->
+    <header class="sticky top-0 z-50 glass-panel border-b border-white/60">
+      <div
+        class="max-w-5xl mx-auto px-5 h-16 flex items-center justify-between"
+      >
+        <div class="flex items-center gap-3">
+          <div
+            class="w-9 h-9 rounded-[12px] bg-primary text-white flex items-center justify-center shadow-glow"
+          >
+            <i class="ph-fill ph-shapes text-lg"></i>
+          </div>
+          <div class="leading-tight">
+            <h1 class="text-[15px] font-extrabold tracking-tight">
+              Component Library
+            </h1>
+            <p class="text-[11px] font-semibold text-gray-500 -mt-0.5">
+              Preline-style · 30+ blocks
+            </p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <button
+            data-open-command
+            class="hidden sm:flex items-center gap-2 text-[12px] font-bold text-gray-500 hover:text-gray-900 bg-white/70 border border-gray-200 rounded-full pl-3 pr-2 py-1.5 transition-colors"
+          >
+            <i class="ph ph-magnifying-glass text-sm"></i> Search
+            <kbd
+              class="font-sans text-[10px] bg-gray-100 border border-gray-200 rounded px-1.5 py-0.5"
+              >⌘K</kbd
+            >
+          </button>
+          <a
+            href="#code"
+            class="text-[12px] font-bold text-white bg-gray-900 hover:bg-black rounded-full px-4 py-2 transition-colors"
+            >Docs</a
+          >
+        </div>
+      </div>
+    </header>
+
+    <!-- ============================================================
+     MAIN
+     ============================================================ -->
+    <main class="max-w-5xl mx-auto px-5 pt-10 pb-32 space-y-16">
+      <!-- ============================== SECTION 01 ============================== -->
+      <section id="code">
+        <div class="flex items-center gap-3 mb-2">
+          <span
+            class="text-[11px] font-extrabold tracking-[0.25em] uppercase text-primary"
+            >01</span
+          >
+          <h2 class="text-2xl font-extrabold tracking-tight">Code Blocks</h2>
+          <div class="flex-1 h-px bg-gray-200"></div>
+        </div>
+        <p class="text-[14px] text-gray-500 mb-8 max-w-2xl">
+          Syntax-highlighted snippets using the GitHub Dark Dimmed palette, with
+          copy-to-clipboard and file tabs.
+        </p>
+
+        <div class="grid gap-6">
+          <!-- 1. Basic code block -->
+          <div class="bg-card rounded-[28px] p-1.5 shadow-soft">
+            <div class="rounded-[22px] overflow-hidden gh-code">
+              <div
+                class="flex items-center justify-between px-4 py-2.5 bg-gh-bg2 border-b border-gh-border"
+              >
+                <div class="flex items-center gap-2">
+                  <span class="w-2.5 h-2.5 rounded-full bg-[#f47067]"></span>
+                  <span class="w-2.5 h-2.5 rounded-full bg-[#c69026]"></span>
+                  <span class="w-2.5 h-2.5 rounded-full bg-[#8ddb8c]"></span>
+                  <span class="ml-3 text-[11px] font-semibold text-gh-muted"
+                    >player.js</span
+                  >
+                </div>
+                <button
+                  data-copy
+                  class="flex items-center gap-1.5 text-[11px] font-bold text-gh-muted hover:text-gh-fg transition-colors"
+                >
+                  <i class="ph ph-copy text-sm"></i> <span>Copy</span>
+                </button>
+              </div>
+              <pre
+                class="gh-scroll p-5 overflow-x-auto"
+              ><code><span class="tok-com">// Bootstrap the Luister audio engine</span>
+<span class="tok-kw">import</span> <span class="tok-punc">{</span> <span class="tok-fn">createPlayer</span> <span class="tok-punc">}</span> <span class="tok-kw">from</span> <span class="tok-str">'@luister/core'</span><span class="tok-punc">;</span>
+
+<span class="tok-kw">const</span> <span class="tok-var">player</span> <span class="tok-punc">=</span> <span class="tok-fn">createPlayer</span><span class="tok-punc">({</span>
+  <span class="tok-prop">container</span><span class="tok-punc">:</span> <span class="tok-str">'#stage'</span><span class="tok-punc">,</span>
+  <span class="tok-prop">autoplay</span><span class="tok-punc">:</span> <span class="tok-bool">true</span><span class="tok-punc">,</span>
+  <span class="tok-prop">quality</span><span class="tok-punc">:</span> <span class="tok-str">'lossless'</span><span class="tok-punc">,</span>
+  <span class="tok-prop">onReady</span><span class="tok-punc">:</span> <span class="tok-punc">({</span> <span class="tok-var">duration</span> <span class="tok-punc">})</span> <span class="tok-kw">=&gt;</span> <span class="tok-punc">{</span>
+    <span class="tok-var">console</span><span class="tok-punc">.</span><span class="tok-fn">log</span><span class="tok-punc">(</span><span class="tok-str">`Ready — <span class="tok-var">${duration}</span>s`</span><span class="tok-punc">);</span>
+  <span class="tok-punc">},</span>
+<span class="tok-punc">});</span>
+
+<span class="tok-var">player</span><span class="tok-punc">.</span><span class="tok-fn">on</span><span class="tok-punc">(</span><span class="tok-str">'trackchange'</span><span class="tok-punc">,</span> <span class="tok-punc">(</span><span class="tok-var">track</span><span class="tok-punc">)</span> <span class="tok-kw">=&gt;</span> <span class="tok-punc">{</span>
+  <span class="tok-var">document</span><span class="tok-punc">.</span><span class="tok-prop">title</span> <span class="tok-punc">=</span> <span class="tok-str">`<span class="tok-var">${track.title}</span> · <span class="tok-var">${track.artist}</span>`</span><span class="tok-punc">;</span>
+<span class="tok-punc">});</span></code></pre>
+            </div>
+          </div>
+
+          <!-- 2. Tabbed code block -->
+          <div class="bg-card rounded-[28px] p-1.5 shadow-soft">
+            <div class="rounded-[22px] overflow-hidden gh-code">
+              <div
+                class="flex items-center justify-between px-3 py-2 bg-gh-bg2 border-b border-gh-border"
+              >
+                <div class="flex items-center gap-1 code-tabs">
+                  <button
+                    data-tab="t1"
+                    class="code-tab active px-3 py-1.5 rounded-lg text-[11px] font-bold text-gh-fg bg-gh-bg border border-gh-border"
+                  >
+                    index.html
+                  </button>
+                  <button
+                    data-tab="t2"
+                    class="code-tab px-3 py-1.5 rounded-lg text-[11px] font-bold text-gh-muted hover:text-gh-fg transition-colors"
+                  >
+                    styles.css
+                  </button>
+                  <button
+                    data-tab="t3"
+                    class="code-tab px-3 py-1.5 rounded-lg text-[11px] font-bold text-gh-muted hover:text-gh-fg transition-colors"
+                  >
+                    app.ts
+                  </button>
+                </div>
+                <button
+                  data-copy
+                  class="flex items-center gap-1.5 text-[11px] font-bold text-gh-muted hover:text-gh-fg transition-colors mr-1"
+                >
+                  <i class="ph ph-copy text-sm"></i> <span>Copy</span>
+                </button>
+              </div>
+
+              <div data-panel="t1">
+                <pre
+                  class="gh-scroll p-5 overflow-x-auto"
+                ><code><span class="tok-punc">&lt;</span><span class="tok-tag">div</span> <span class="tok-attr">class</span><span class="tok-punc">=</span><span class="tok-str">"player-shell"</span><span class="tok-punc">&gt;</span>
+  <span class="tok-punc">&lt;</span><span class="tok-tag">video</span> <span class="tok-attr">id</span><span class="tok-punc">=</span><span class="tok-str">"stage"</span> <span class="tok-attr">playsinline</span> <span class="tok-attr">controls</span><span class="tok-punc">&gt;&lt;/</span><span class="tok-tag">video</span><span class="tok-punc">&gt;</span>
+  <span class="tok-punc">&lt;</span><span class="tok-tag">button</span> <span class="tok-attr">data-pip</span><span class="tok-punc">&gt;</span>Picture in Picture<span class="tok-punc">&lt;/</span><span class="tok-tag">button</span><span class="tok-punc">&gt;</span>
+<span class="tok-punc">&lt;/</span><span class="tok-tag">div</span><span class="tok-punc">&gt;</span></code></pre>
+              </div>
+
+              <div data-panel="t2" class="hidden">
+                <pre
+                  class="gh-scroll p-5 overflow-x-auto"
+                ><code><span class="tok-punc">.</span><span class="tok-fn">player-shell</span> <span class="tok-punc">{</span>
+  <span class="tok-prop">position</span><span class="tok-punc">:</span> <span class="tok-const">relative</span><span class="tok-punc">;</span>
+  <span class="tok-prop">border-radius</span><span class="tok-punc">:</span> <span class="tok-num">24px</span><span class="tok-punc">;</span>
+  <span class="tok-prop">overflow</span><span class="tok-punc">:</span> <span class="tok-const">hidden</span><span class="tok-punc">;</span>
+  <span class="tok-prop">background</span><span class="tok-punc">:</span> <span class="tok-fn">linear-gradient</span><span class="tok-punc">(</span><span class="tok-num">180deg</span><span class="tok-punc">,</span> <span class="tok-const">#1a1b26</span><span class="tok-punc">,</span> <span class="tok-const">#0d0e14</span><span class="tok-punc">);</span>
+<span class="tok-punc">}</span></code></pre>
+              </div>
+
+              <div data-panel="t3" class="hidden">
+                <pre
+                  class="gh-scroll p-5 overflow-x-auto"
+                ><code><span class="tok-kw">type</span> <span class="tok-type">PlayerState</span> <span class="tok-punc">=</span> <span class="tok-str">'inline'</span> <span class="tok-punc">|</span> <span class="tok-str">'floating'</span> <span class="tok-punc">|</span> <span class="tok-str">'pip'</span><span class="tok-punc">;</span>
+
+<span class="tok-kw">export</span> <span class="tok-kw">const</span> <span class="tok-fn">attachPip</span> <span class="tok-punc">=</span> <span class="tok-kw">async</span> <span class="tok-punc">(</span><span class="tok-var">v</span><span class="tok-punc">:</span> <span class="tok-type">HTMLVideoElement</span><span class="tok-punc">)</span> <span class="tok-punc">=&gt;</span> <span class="tok-punc">{</span>
+  <span class="tok-kw">if</span> <span class="tok-punc">(</span><span class="tok-var">document</span><span class="tok-punc">.</span><span class="tok-prop">pictureInPictureEnabled</span><span class="tok-punc">)</span> <span class="tok-punc">{</span>
+    <span class="tok-kw">await</span> <span class="tok-var">v</span><span class="tok-punc">.</span><span class="tok-fn">requestPictureInPicture</span><span class="tok-punc">();</span>
+  <span class="tok-punc">}</span>
+<span class="tok-punc">};</span></code></pre>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. Terminal block -->
+          <div class="bg-card rounded-[28px] p-1.5 shadow-soft">
+            <div class="rounded-[22px] overflow-hidden gh-code">
+              <div
+                class="flex items-center justify-between px-4 py-2.5 bg-gh-bg2 border-b border-gh-border"
+              >
+                <div class="flex items-center gap-2">
+                  <i class="ph ph-terminal-window text-gh-muted text-sm"></i>
+                  <span class="text-[11px] font-semibold text-gh-muted"
+                    >bash — zsh</span
+                  >
+                </div>
+                <button
+                  data-copy
+                  class="flex items-center gap-1.5 text-[11px] font-bold text-gh-muted hover:text-gh-fg transition-colors"
+                >
+                  <i class="ph ph-copy text-sm"></i> <span>Copy</span>
+                </button>
+              </div>
+              <pre
+                class="gh-scroll p-5 overflow-x-auto"
+              ><code><span class="tok-muted tok-com">$</span> <span class="tok-fn">npm</span> install @luister/core
+<span class="tok-muted tok-com">$</span> <span class="tok-fn">npx</span> luister init --template minimal
+<span class="tok-ok">✓</span> Project scaffolded in <span class="tok-num">./my-app</span> <span class="tok-punc">(</span><span class="tok-num">2.4</span>s<span class="tok-punc">)</span>
+<span class="tok-ok">✓</span> Dependencies installed <span class="tok-punc">(</span><span class="tok-num">148</span> packages<span class="tok-punc">)</span>
+<span class="tok-warn">⚠</span> Node <span class="tok-num">18.17</span> detected — <span class="tok-num">20</span>+ recommended
+
+<span class="tok-com"># Start the dev server</span>
+<span class="tok-muted tok-com">$</span> <span class="tok-fn">npm</span> run dev
+<span class="tok-const">➜</span>  Local:   <span class="tok-str">http://localhost:5173/</span></code></pre>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================== SECTION 02 ============================== -->
+      <section id="overlays">
+        <div class="flex items-center gap-3 mb-2">
+          <span
+            class="text-[11px] font-extrabold tracking-[0.25em] uppercase text-primary"
+            >02</span
+          >
+          <h2 class="text-2xl font-extrabold tracking-tight">
+            Overlays &amp; Surfaces
+          </h2>
+          <div class="flex-1 h-px bg-gray-200"></div>
+        </div>
+        <p class="text-[14px] text-gray-500 mb-8 max-w-2xl">
+          Popovers, modals, sheets, offcanvas, command palette, context menus
+          and tooltips — all keyboard-friendly.
+        </p>
+
+        <div class="grid md:grid-cols-2 gap-6">
+          <!-- 4. Popover -->
+          <div class="bg-card rounded-[28px] p-6 shadow-soft">
+            <h3 class="text-[15px] font-bold mb-1">Popover</h3>
+            <p class="text-[13px] text-gray-500 mb-5">
+              Click-triggered floating panel with arrow.
+            </p>
+            <div class="relative inline-block" data-popover-root>
+              <button
+                data-popover-trigger
+                class="inline-flex items-center gap-2 bg-primary text-white text-[13px] font-bold px-4 py-2.5 rounded-full shadow-glow hover:bg-primaryDark transition-colors"
+              >
+                <i class="ph ph-sliders-horizontal"></i> Playback settings
+              </button>
+              <div
+                data-popover
+                class="hidden absolute left-0 top-[calc(100%+12px)] w-72 bg-card rounded-2xl shadow-pop border border-gray-100 p-4 z-40 fade-up"
+              >
+                <div
+                  class="absolute -top-1.5 left-6 w-3 h-3 bg-card border-l border-t border-gray-100 rotate-45"
+                ></div>
+                <h4 class="text-[13px] font-bold mb-3">Playback</h4>
+                <div class="space-y-3">
+                  <label
+                    class="flex items-center justify-between cursor-pointer"
+                  >
+                    <span class="text-[13px] text-gray-600 font-medium"
+                      >Gapless playback</span
+                    >
+                    <input
+                      type="checkbox"
+                      checked
+                      class="accent-primary w-4 h-4"
+                    />
+                  </label>
+                  <label
+                    class="flex items-center justify-between cursor-pointer"
+                  >
+                    <span class="text-[13px] text-gray-600 font-medium"
+                      >Normalize volume</span
+                    >
+                    <input type="checkbox" class="accent-primary w-4 h-4" />
+                  </label>
+                  <label
+                    class="flex items-center justify-between cursor-pointer"
+                  >
+                    <span class="text-[13px] text-gray-600 font-medium"
+                      >Autoplay similar</span
+                    >
+                    <input
+                      type="checkbox"
+                      checked
+                      class="accent-primary w-4 h-4"
+                    />
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 5. Popover with form -->
+          <div class="bg-card rounded-[28px] p-6 shadow-soft">
+            <h3 class="text-[15px] font-bold mb-1">Popover · Form</h3>
+            <p class="text-[13px] text-gray-500 mb-5">
+              Inline capture without leaving the page.
+            </p>
+            <div class="relative inline-block" data-popover-root>
+              <button
+                data-popover-trigger
+                class="inline-flex items-center gap-2 bg-gray-900 text-white text-[13px] font-bold px-4 py-2.5 rounded-full hover:bg-black transition-colors"
+              >
+                <i class="ph ph-envelope-simple"></i> Subscribe
+              </button>
+              <div
+                data-popover
+                class="hidden absolute left-0 top-[calc(100%+12px)] w-80 bg-card rounded-2xl shadow-pop border border-gray-100 p-5 z-40 fade-up"
+              >
+                <div
+                  class="absolute -top-1.5 left-6 w-3 h-3 bg-card border-l border-t border-gray-100 rotate-45"
+                ></div>
+                <h4 class="text-[14px] font-bold">Weekly digest</h4>
+                <p class="text-[12px] text-gray-500 mt-1 mb-3">
+                  New releases and playlists, every Friday.
+                </p>
+                <input
+                  type="email"
+                  placeholder="you@example.com"
+                  class="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-[13px] focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all mb-3"
+                />
+                <button
+                  class="w-full bg-primary text-white rounded-xl py-2.5 text-[13px] font-bold hover:bg-primaryDark transition-colors"
+                >
+                  Subscribe
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 6. Modal -->
+          <div class="bg-card rounded-[28px] p-6 shadow-soft">
+            <h3 class="text-[15px] font-bold mb-1">Modal</h3>
+            <p class="text-[13px] text-gray-500 mb-5">
+              Centered dialog with backdrop blur.
+            </p>
+            <button
+              data-open-modal="modalBasic"
+              class="inline-flex items-center gap-2 bg-primary text-white text-[13px] font-bold px-4 py-2.5 rounded-full shadow-glow hover:bg-primaryDark transition-colors"
+            >
+              <i class="ph ph-rectangle"></i> Open modal
+            </button>
+          </div>
+
+          <!-- 7. Modal confirm -->
+          <div class="bg-card rounded-[28px] p-6 shadow-soft">
+            <h3 class="text-[15px] font-bold mb-1">Confirm Dialog</h3>
+            <p class="text-[13px] text-gray-500 mb-5">
+              Destructive action with icon header.
+            </p>
+            <button
+              data-open-modal="modalConfirm"
+              class="inline-flex items-center gap-2 bg-red-500 text-white text-[13px] font-bold px-4 py-2.5 rounded-full hover:bg-red-600 transition-colors"
+            >
+              <i class="ph ph-trash"></i> Delete playlist
+            </button>
+          </div>
+
+          <!-- 8. Sheet right -->
+          <div class="bg-card rounded-[28px] p-6 shadow-soft">
+            <h3 class="text-[15px] font-bold mb-1">Sheet · Right</h3>
+            <p class="text-[13px] text-gray-500 mb-5">
+              Side panel for detail editing.
+            </p>
+            <button
+              data-open-sheet="sheetRight"
+              class="inline-flex items-center gap-2 bg-gray-900 text-white text-[13px] font-bold px-4 py-2.5 rounded-full hover:bg-black transition-colors"
+            >
+              <i class="ph ph-sidebar-simple"></i> Open sheet
+            </button>
+          </div>
+
+          <!-- 9. Sheet left -->
+          <div class="bg-card rounded-[28px] p-6 shadow-soft">
+            <h3 class="text-[15px] font-bold mb-1">Sheet · Left</h3>
+            <p class="text-[13px] text-gray-500 mb-5">
+              Navigation drawer pattern.
+            </p>
+            <button
+              data-open-sheet="sheetLeft"
+              class="inline-flex items-center gap-2 bg-white border border-gray-200 text-gray-900 text-[13px] font-bold px-4 py-2.5 rounded-full hover:bg-gray-50 transition-colors"
+            >
+              <i class="ph ph-list"></i> Open drawer
+            </button>
+          </div>
+
+          <!-- 10. Offcanvas bottom -->
+          <div class="bg-card rounded-[28px] p-6 shadow-soft">
+            <h3 class="text-[15px] font-bold mb-1">Offcanvas · Bottom</h3>
+            <p class="text-[13px] text-gray-500 mb-5">
+              Mobile-first action sheet.
+            </p>
+            <button
+              data-open-sheet="offcanvasBottom"
+              class="inline-flex items-center gap-2 bg-primary/10 text-primary text-[13px] font-bold px-4 py-2.5 rounded-full hover:bg-primary/15 transition-colors"
+            >
+              <i class="ph ph-arrow-line-up"></i> Open offcanvas
+            </button>
+          </div>
+
+          <!-- 11. Command palette -->
+          <div class="bg-card rounded-[28px] p-6 shadow-soft">
+            <h3 class="text-[15px] font-bold mb-1">Command Palette</h3>
+            <p class="text-[13px] text-gray-500 mb-5">
+              Global search overlay — press
+              <kbd
+                class="font-sans text-[11px] bg-gray-100 border border-gray-200 rounded px-1.5 py-0.5"
+                >⌘K</kbd
+              >
+            </p>
+            <button
+              data-open-command
+              class="inline-flex items-center gap-2 bg-gray-100 text-gray-900 text-[13px] font-bold px-4 py-2.5 rounded-full hover:bg-gray-200 transition-colors"
+            >
+              <i class="ph ph-command"></i> Open palette
+            </button>
+          </div>
+
+          <!-- 12. Context menu -->
+          <div class="bg-card rounded-[28px] p-6 shadow-soft">
+            <h3 class="text-[15px] font-bold mb-1">Context Menu</h3>
+            <p class="text-[13px] text-gray-500 mb-5">
+              Right-click anywhere in the box below.
+            </p>
+            <div
+              id="ctxArea"
+              class="border-2 border-dashed border-gray-200 rounded-2xl h-24 flex items-center justify-center text-[13px] font-semibold text-gray-400 select-none cursor-context-menu hover:border-primary/40 hover:bg-primary/5 transition-colors"
+            >
+              <i class="ph ph-cursor-click mr-2 text-lg"></i> Right-click me
+            </div>
+          </div>
+
+          <!-- 13. Tooltips -->
+          <div class="bg-card rounded-[28px] p-6 shadow-soft">
+            <h3 class="text-[15px] font-bold mb-1">Tooltips</h3>
+            <p class="text-[13px] text-gray-500 mb-5">
+              Four placements, CSS-only.
+            </p>
+            <div class="flex flex-wrap items-center gap-3">
+              <span class="group relative">
+                <button
+                  class="w-11 h-11 rounded-xl bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 transition-colors"
+                >
+                  <i class="ph ph-arrow-up"></i>
+                </button>
+                <span
+                  class="pointer-events-none absolute bottom-[calc(100%+8px)] left-1/2 -translate-x-1/2 whitespace-nowrap bg-gray-900 text-white text-[11px] font-bold px-2.5 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                  >Top tooltip</span
+                >
+              </span>
+              <span class="group relative">
+                <button
+                  class="w-11 h-11 rounded-xl bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 transition-colors"
+                >
+                  <i class="ph ph-arrow-down"></i>
+                </button>
+                <span
+                  class="pointer-events-none absolute top-[calc(100%+8px)] left-1/2 -translate-x-1/2 whitespace-nowrap bg-gray-900 text-white text-[11px] font-bold px-2.5 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                  >Bottom tooltip</span
+                >
+              </span>
+              <span class="group relative">
+                <button
+                  class="w-11 h-11 rounded-xl bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 transition-colors"
+                >
+                  <i class="ph ph-arrow-left"></i>
+                </button>
+                <span
+                  class="pointer-events-none absolute right-[calc(100%+8px)] top-1/2 -translate-y-1/2 whitespace-nowrap bg-gray-900 text-white text-[11px] font-bold px-2.5 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                  >Left</span
+                >
+              </span>
+              <span class="group relative">
+                <button
+                  class="w-11 h-11 rounded-xl bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 transition-colors"
+                >
+                  <i class="ph ph-arrow-right"></i>
+                </button>
+                <span
+                  class="pointer-events-none absolute left-[calc(100%+8px)] top-1/2 -translate-y-1/2 whitespace-nowrap bg-gray-900 text-white text-[11px] font-bold px-2.5 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                  >Right</span
+                >
+              </span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================== SECTION 03 ============================== -->
+      <section id="media">
+        <div class="flex items-center gap-3 mb-2">
+          <span
+            class="text-[11px] font-extrabold tracking-[0.25em] uppercase text-primary"
+            >03</span
+          >
+          <h2 class="text-2xl font-extrabold tracking-tight">
+            Media &amp; Picture-in-Picture
+          </h2>
+          <div class="flex-1 h-px bg-gray-200"></div>
+        </div>
+        <p class="text-[14px] text-gray-500 mb-8 max-w-2xl">
+          A single video element that can live in four states: inline, floating,
+          docked to a sheet / offcanvas, or handed off to the native
+          Picture-in-Picture window.
+        </p>
+
+        <!-- 14. Floating video player -->
+        <div class="bg-card rounded-[28px] p-6 shadow-soft">
+          <div class="flex flex-wrap items-center justify-between gap-4 mb-5">
+            <div>
+              <h3 class="text-[15px] font-bold">Floating Video Player</h3>
+              <p class="text-[13px] text-gray-500 mt-0.5">
+                Switch between player states — playback continues seamlessly.
+              </p>
+            </div>
+            <div class="flex items-center gap-2">
+              <span
+                class="text-[11px] font-extrabold uppercase tracking-wider text-gray-400"
+                >State</span
+              >
+              <span
+                id="playerStateBadge"
+                class="bg-primary/10 text-primary text-[11px] font-extrabold uppercase tracking-wider px-3 py-1 rounded-full"
+                >Inline</span
+              >
+            </div>
+          </div>
+
+          <!-- Inline dock -->
+          <div
+            id="videoDock"
+            class="rounded-[22px] bg-gray-900 overflow-hidden min-h-[180px] flex items-center justify-center"
+          >
+            <!-- #videoWrap is moved between containers -->
+            <div id="videoWrap" class="relative w-full">
+              <video
+                id="theVideo"
+                class="w-full aspect-video object-cover bg-black"
+                playsinline
+                poster="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1200&auto=format&fit=crop"
+                src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4"
+              ></video>
+
+              <!-- Overlay controls -->
+              <div
+                class="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/85 via-black/40 to-transparent"
+              >
+                <div class="flex items-center gap-3">
+                  <button
+                    id="vPlay"
+                    class="w-9 h-9 rounded-full bg-white/15 backdrop-blur text-white flex items-center justify-center hover:bg-white/25 transition-colors"
+                  >
+                    <i class="ph-fill ph-play text-sm"></i>
+                  </button>
+                  <div class="flex-1">
+                    <div
+                      id="vBar"
+                      class="h-1 bg-white/25 rounded-full overflow-hidden cursor-pointer"
+                    >
+                      <div
+                        id="vProgress"
+                        class="h-full bg-primary w-0 rounded-full"
+                      ></div>
+                    </div>
+                  </div>
+                  <span
+                    id="vTime"
+                    class="text-[11px] font-bold text-white/80 tabular-nums"
+                    >0:00</span
+                  >
+                  <button
+                    id="vMute"
+                    class="w-8 h-8 rounded-full text-white/80 hover:text-white flex items-center justify-center transition-colors"
+                  >
+                    <i class="ph ph-speaker-high text-base"></i>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Close button (only in floating) -->
+              <button
+                id="vClose"
+                class="hidden absolute top-2 right-2 w-8 h-8 rounded-full bg-black/50 backdrop-blur text-white items-center justify-center hover:bg-black/70 transition-colors"
+              >
+                <i class="ph ph-x text-sm"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- State switcher -->
+          <div class="flex flex-wrap gap-2 mt-5">
+            <button
+              data-player-state="inline"
+              class="player-state-btn px-4 py-2 rounded-full text-[12px] font-bold bg-primary text-white shadow-glow transition-colors"
+            >
+              <i class="ph ph-square mr-1"></i> Inline
+            </button>
+            <button
+              data-player-state="floating"
+              class="player-state-btn px-4 py-2 rounded-full text-[12px] font-bold bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
+            >
+              <i class="ph ph-picture-in-picture mr-1"></i> Floating
+            </button>
+            <button
+              data-player-state="sheet"
+              class="player-state-btn px-4 py-2 rounded-full text-[12px] font-bold bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
+            >
+              <i class="ph ph-sidebar-simple mr-1"></i> Dock to Sheet
+            </button>
+            <button
+              data-player-state="offcanvas"
+              class="player-state-btn px-4 py-2 rounded-full text-[12px] font-bold bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
+            >
+              <i class="ph ph-arrow-line-down mr-1"></i> Dock to Offcanvas
+            </button>
+            <button
+              data-player-state="pip"
+              class="player-state-btn px-4 py-2 rounded-full text-[12px] font-bold bg-gray-900 text-white hover:bg-black transition-colors"
+            >
+              <i class="ph ph-monitor-play mr-1"></i> Picture-in-Picture
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================== SECTION 04 ============================== -->
+      <section id="forms">
+        <div class="flex items-center gap-3 mb-2">
+          <span
+            class="text-[11px] font-extrabold tracking-[0.25em] uppercase text-primary"
+            >04</span
+          >
+          <h2 class="text-2xl font-extrabold tracking-tight">Form Controls</h2>
+          <div class="flex-1 h-px bg-gray-200"></div>
+        </div>
+        <p class="text-[14px] text-gray-500 mb-8 max-w-2xl">
+          Inputs, tags, color pickers, sliders, ratings, segmented controls and
+          steppers.
+        </p>
+
+        <div class="grid md:grid-cols-2 gap-6">
+          <!-- 15. Floating label input -->
+          <div class="bg-card rounded-[28px] p-6 shadow-soft">
+            <h3 class="text-[15px] font-bold mb-5">Floating Label Input</h3>
+            <div class="space-y-4">
+              <div class="relative">
+                <input
+                  id="fl1"
+                  type="text"
+                  placeholder=" "
+                  class="peer w-full border border-gray-200 rounded-2xl px-4 pt-6 pb-2 text-[14px] font-medium focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all"
+                />
+                <label
+                  for="fl1"
+                  class="absolute left-4 top-1/2 -translate-y-1/2 text-[14px] text-gray-400 pointer-events-none transition-all peer-focus:top-3.5 peer-focus:text-[11px] peer-focus:font-bold peer-focus:text-primary peer-[:not(:placeholder-shown)]:top-3.5 peer-[:not(:placeholder-shown)]:text-[11px] peer-[:not(:placeholder-shown)]:font-bold"
+                  >Display name</label
+                >
+              </div>
+              <div class="relative">
+                <input
+                  id="fl2"
+                  type="email"
+                  placeholder=" "
+                  value="lucy@luister.com"
+                  class="peer w-full border border-gray-200 rounded-2xl px-4 pt-6 pb-2 text-[14px] font-medium focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all"
+                />
+                <label
+                  for="fl2"
+                  class="absolute left-4 top-1/2 -translate-y-1/2 text-[14px] text-gray-400 pointer-events-none transition-all peer-focus:top-3.5 peer-focus:text-[11px] peer-focus:font-bold peer-focus:text-primary peer-[:not(:placeholder-shown)]:top-3.5 peer-[:not(:placeholder-shown)]:text-[11px] peer-[:not(:placeholder-shown)]:font-bold"
+                  >Email address</label
+                >
+              </div>
+            </div>
+          </div>
+
+          <!-- 16. Tags input -->
+          <div class="bg-card rounded-[28px] p-6 shadow-soft">
+            <h3 class="text-[15px] font-bold mb-5">Tags Input</h3>
+            <div
+              id="tagsField"
+              class="flex flex-wrap gap-2 items-center border border-gray-200 rounded-2xl p-2.5 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/15 transition-all min-h-[52px] cursor-text"
+            >
+              <span
+                class="tag-chip inline-flex items-center gap-1.5 bg-primary/10 text-primary text-[12px] font-bold pl-3 pr-1.5 py-1.5 rounded-full"
+              >
+                Indie
+                <button
+                  class="tag-remove w-4 h-4 rounded-full hover:bg-primary/20 flex items-center justify-center"
+                >
+                  <i class="ph-bold ph-x text-[10px]"></i>
+                </button>
+              </span>
+              <span
+                class="tag-chip inline-flex items-center gap-1.5 bg-primary/10 text-primary text-[12px] font-bold pl-3 pr-1.5 py-1.5 rounded-full"
+              >
+                Synthwave
+                <button
+                  class="tag-remove w-4 h-4 rounded-full hover:bg-primary/20 flex items-center justify-center"
+                >
+                  <i class="ph-bold ph-x text-[10px]"></i>
+                </button>
+              </span>
+              <input
+                id="tagsInput"
+                type="text"
+                placeholder="Add genre…"
+                class="flex-1 min-w-[110px] bg-transparent text-[13px] font-medium focus:outline-none py-1.5 px-1"
+              />
+            </div>
+            <p class="text-[11px] text-gray-400 mt-2 font-medium">
+              Press
+              <kbd
+                class="font-sans bg-gray-100 border border-gray-200 rounded px-1.5 py-0.5 text-[10px]"
+                >Enter</kbd
+              >
+              to add
+            </p>
+          </div>
+
+          <!-- 17. Color picker -->
+          <div class="bg-card rounded-[28px] p-6 shadow-soft">
+            <h3 class="text-[15px] font-bold mb-5">Accent Color</h3>
+            <div class="flex flex-wrap gap-3 mb-5" id="swatchRow">
+              <button
+                data-color="#6b4eff"
+                class="swatch w-10 h-10 rounded-2xl bg-[#6b4eff] ring-2 ring-offset-2 ring-[#6b4eff] transition-all"
+              ></button>
+              <button
+                data-color="#e1306c"
+                class="swatch w-10 h-10 rounded-2xl bg-[#e1306c] ring-2 ring-offset-2 ring-transparent hover:ring-[#e1306c] transition-all"
+              ></button>
+              <button
+                data-color="#0ea5e9"
+                class="swatch w-10 h-10 rounded-2xl bg-[#0ea5e9] ring-2 ring-offset-2 ring-transparent hover:ring-[#0ea5e9] transition-all"
+              ></button>
+              <button
+                data-color="#22c55e"
+                class="swatch w-10 h-10 rounded-2xl bg-[#22c55e] ring-2 ring-offset-2 ring-transparent hover:ring-[#22c55e] transition-all"
+              ></button>
+              <button
+                data-color="#f59e0b"
+                class="swatch w-10 h-10 rounded-2xl bg-[#f59e0b] ring-2 ring-offset-2 ring-transparent hover:ring-[#f59e0b] transition-all"
+              ></button>
+              <label
+                class="w-10 h-10 rounded-2xl border-2 border-dashed border-gray-300 flex items-center justify-center cursor-pointer hover:border-primary transition-colors"
+              >
+                <i class="ph ph-plus text-gray-400"></i>
+                <input
+                  type="color"
+                  value="#6b4eff"
+                  class="sr-only"
+                  id="customColor"
+                />
+              </label>
+            </div>
+            <div class="flex items-center gap-3 bg-gray-50 rounded-2xl p-3">
+              <div
+                id="colorPreview"
+                class="w-10 h-10 rounded-xl bg-[#6b4eff] shadow-sm"
+              ></div>
+              <code
+                id="colorHex"
+                class="font-mono text-[13px] font-bold text-gray-700"
+                >#6b4eff</code
+              >
+            </div>
+          </div>
+
+          <!-- 18. Range slider -->
+          <div class="bg-card rounded-[28px] p-6 shadow-soft">
+            <h3 class="text-[15px] font-bold mb-5">Volume</h3>
+            <div class="relative pt-10">
+              <div
+                id="rangeBubble"
+                class="absolute -top-0 -translate-x-1/2 bg-gray-900 text-white text-[11px] font-bold px-2.5 py-1 rounded-lg transition-all"
+                style="left: 60%"
+              >
+                60
+              </div>
+              <input id="volRange" type="range" min="0" max="100" value="60" />
+            </div>
+            <div
+              class="flex justify-between mt-3 text-[11px] font-bold text-gray-400"
+            >
+              <i class="ph ph-speaker-none text-lg"></i>
+              <i class="ph ph-speaker-high text-lg"></i>
+            </div>
+          </div>
+
+          <!-- 19. Star rating -->
+          <div class="bg-card rounded-[28px] p-6 shadow-soft">
+            <h3 class="text-[15px] font-bold mb-5">Rate this track</h3>
+            <div id="starRow" class="flex items-center gap-1.5 mb-3">
+              <button
+                data-star="1"
+                class="star text-3xl text-gray-200 hover:scale-110 transition-transform"
+              >
+                <i class="ph-fill ph-star"></i>
+              </button>
+              <button
+                data-star="2"
+                class="star text-3xl text-gray-200 hover:scale-110 transition-transform"
+              >
+                <i class="ph-fill ph-star"></i>
+              </button>
+              <button
+                data-star="3"
+                class="star text-3xl text-gray-200 hover:scale-110 transition-transform"
+              >
+                <i class="ph-fill ph-star"></i>
+              </button>
+              <button
+                data-star="4"
+                class="star text-3xl text-gray-200 hover:scale-110 transition-transform"
+              >
+                <i class="ph-fill ph-star"></i>
+              </button>
+              <button
+                data-star="5"
+                class="star text-3xl text-gray-200 hover:scale-110 transition-transform"
+              >
+                <i class="ph-fill ph-star"></i>
+              </button>
+            </div>
+            <p id="starLabel" class="text-[13px] font-semibold text-gray-500">
+              Tap a star to rate
+            </p>
+          </div>
+
+          <!-- 20. Segmented control -->
+          <div class="bg-card rounded-[28px] p-6 shadow-soft">
+            <h3 class="text-[15px] font-bold mb-5">Time range</h3>
+            <div
+              class="bg-gray-100 rounded-full p-1 inline-flex w-full"
+              id="segmented"
+            >
+              <button
+                data-seg
+                class="seg-btn flex-1 px-4 py-2 rounded-full text-[12.5px] font-bold bg-white text-gray-900 shadow-sm transition-all"
+              >
+                4 Weeks
+              </button>
+              <button
+                data-seg
+                class="seg-btn flex-1 px-4 py-2 rounded-full text-[12.5px] font-bold text-gray-500 hover:text-gray-900 transition-all"
+              >
+                6 Months
+              </button>
+              <button
+                data-seg
+                class="seg-btn flex-1 px-4 py-2 rounded-full text-[12.5px] font-bold text-gray-500 hover:text-gray-900 transition-all"
+              >
+                Lifetime
+              </button>
+            </div>
+            <p class="text-[12px] text-gray-400 mt-4 font-medium">
+              Showing data for
+              <span id="segLabel" class="font-bold text-gray-700">4 Weeks</span>
+            </p>
+          </div>
+
+          <!-- 21. Stepper -->
+          <div class="bg-card rounded-[28px] p-6 shadow-soft md:col-span-2">
+            <h3 class="text-[15px] font-bold mb-6">Checkout Stepper</h3>
+            <div class="relative flex items-center justify-between mb-8">
+              <div
+                class="absolute left-0 right-0 top-4 h-0.5 bg-gray-100 -z-0"
+              ></div>
+              <div
+                id="stepBar"
+                class="absolute left-0 top-4 h-0.5 bg-primary -z-0 transition-all duration-500"
+                style="width: 0%"
+              ></div>
+
+              <div
+                class="step-node flex flex-col items-center gap-2 relative z-10"
+                data-step="1"
+              >
+                <div
+                  class="step-dot w-9 h-9 rounded-full bg-primary text-white flex items-center justify-center font-bold text-[13px] shadow-md transition-all"
+                >
+                  1
+                </div>
+                <span class="text-[11px] font-bold text-gray-900">Cart</span>
+              </div>
+              <div
+                class="step-node flex flex-col items-center gap-2 relative z-10"
+                data-step="2"
+              >
+                <div
+                  class="step-dot w-9 h-9 rounded-full bg-white border-2 border-gray-200 text-gray-400 flex items-center justify-center font-bold text-[13px] transition-all"
+                >
+                  2
+                </div>
+                <span
+                  class="text-[11px] font-bold text-gray-400 transition-colors"
+                  >Shipping</span
+                >
+              </div>
+              <div
+                class="step-node flex flex-col items-center gap-2 relative z-10"
+                data-step="3"
+              >
+                <div
+                  class="step-dot w-9 h-9 rounded-full bg-white border-2 border-gray-200 text-gray-400 flex items-center justify-center font-bold text-[13px] transition-all"
+                >
+                  3
+                </div>
+                <span
+                  class="text-[11px] font-bold text-gray-400 transition-colors"
+                  >Payment</span
+                >
+              </div>
+              <div
+                class="step-node flex flex-col items-center gap-2 relative z-10"
+                data-step="4"
+              >
+                <div
+                  class="step-dot w-9 h-9 rounded-full bg-white border-2 border-gray-200 text-gray-400 flex items-center justify-center font-bold text-[13px] transition-all"
+                >
+                  4
+                </div>
+                <span
+                  class="text-[11px] font-bold text-gray-400 transition-colors"
+                  >Done</span
+                >
+              </div>
+            </div>
+
+            <div class="flex gap-3">
+              <button
+                id="stepPrev"
+                class="flex-1 border border-gray-200 rounded-xl py-3 text-[13px] font-bold text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                Back
+              </button>
+              <button
+                id="stepNext"
+                class="flex-1 bg-gray-900 text-white rounded-xl py-3 text-[13px] font-bold hover:bg-black transition-colors"
+              >
+                Continue
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================== SECTION 05 ============================== -->
+      <section id="data">
+        <div class="flex items-center gap-3 mb-2">
+          <span
+            class="text-[11px] font-extrabold tracking-[0.25em] uppercase text-primary"
+            >05</span
+          >
+          <h2 class="text-2xl font-extrabold tracking-tight">Data Display</h2>
+          <div class="flex-1 h-px bg-gray-200"></div>
+        </div>
+        <p class="text-[14px] text-gray-500 mb-8 max-w-2xl">
+          Tables, timelines, avatars, stats, progress rings, accordions and
+          tabs.
+        </p>
+
+        <div class="grid md:grid-cols-2 gap-6">
+          <!-- 22. Data table -->
+          <div class="bg-card rounded-[28px] p-6 shadow-soft md:col-span-2">
+            <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
+              <div>
+                <h3 class="text-[15px] font-bold">Team Members</h3>
+                <p class="text-[12px] text-gray-500 mt-0.5">
+                  4 people · 2 pending invites
+                </p>
+              </div>
+              <div class="flex items-center gap-2">
+                <div class="relative hidden sm:block">
+                  <i
+                    class="ph ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"
+                  ></i>
+                  <input
+                    id="tableSearch"
+                    type="text"
+                    placeholder="Search…"
+                    class="bg-gray-50 border border-gray-200 rounded-full pl-9 pr-4 py-2 text-[13px] w-48 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all"
+                  />
+                </div>
+                <button
+                  class="bg-primary text-white rounded-full px-4 py-2 text-[12.5px] font-bold shadow-glow hover:bg-primaryDark transition-colors inline-flex items-center gap-1.5"
+                >
+                  <i class="ph-bold ph-plus text-xs"></i> Invite
+                </button>
+              </div>
+            </div>
+
+            <div class="overflow-x-auto -mx-2">
+              <table class="w-full min-w-[560px] text-left" id="dataTable">
+                <thead>
+                  <tr class="border-b border-gray-100">
+                    <th
+                      class="px-3 py-3 text-[11px] font-extrabold uppercase tracking-wider text-gray-400 cursor-pointer select-none"
+                      data-sort="name"
+                    >
+                      Name <i class="ph ph-caret-up-down text-xs"></i>
+                    </th>
+                    <th
+                      class="px-3 py-3 text-[11px] font-extrabold uppercase tracking-wider text-gray-400"
+                    >
+                      Role
+                    </th>
+                    <th
+                      class="px-3 py-3 text-[11px] font-extrabold uppercase tracking-wider text-gray-400"
+                    >
+                      Status
+                    </th>
+                    <th
+                      class="px-3 py-3 text-[11px] font-extrabold uppercase tracking-wider text-gray-400 text-right"
+                    >
+                      Last active
+                    </th>
+                  </tr>
+                </thead>
+                <tbody id="tableBody" class="divide-y divide-gray-50"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- 23. Timeline -->
+          <div class="bg-card rounded-[28px] p-6 shadow-soft">
+            <h3 class="text-[15px] font-bold mb-6">Activity Timeline</h3>
+            <div class="relative pl-6 border-l-2 border-gray-100 space-y-6">
+              <div class="relative">
+                <div
+                  class="absolute -left-[31px] w-4 h-4 bg-primary rounded-full border-4 border-card shadow-sm"
+                ></div>
+                <p class="text-[11px] font-bold text-gray-400 mb-1">Just now</p>
+                <h4 class="text-[14px] font-bold">Backup completed</h4>
+                <p class="text-[13px] text-gray-500 mt-1">
+                  Exported 24,812 records to cold storage.
+                </p>
+              </div>
+              <div class="relative">
+                <div
+                  class="absolute -left-[31px] w-4 h-4 bg-blue-500 rounded-full border-4 border-card shadow-sm"
+                ></div>
+                <p class="text-[11px] font-bold text-gray-400 mb-1">
+                  2 hours ago
+                </p>
+                <h4 class="text-[14px] font-bold">New member joined</h4>
+                <div
+                  class="flex items-center gap-2 mt-2 bg-gray-50 p-2 rounded-lg w-fit"
+                >
+                  <img
+                    src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=100"
+                    class="w-6 h-6 rounded-full object-cover"
+                  />
+                  <span class="text-[12px] font-bold text-gray-700"
+                    >Alice Freeman</span
+                  >
+                </div>
+              </div>
+              <div class="relative">
+                <div
+                  class="absolute -left-[31px] w-4 h-4 bg-orange-500 rounded-full border-4 border-card shadow-sm"
+                ></div>
+                <p class="text-[11px] font-bold text-gray-400 mb-1">
+                  Yesterday
+                </p>
+                <h4 class="text-[14px] font-bold">Payment failed</h4>
+                <p class="text-[13px] text-gray-500 mt-1">
+                  Retry scheduled for tomorrow.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- 24. Avatar group + hover card -->
+          <div class="bg-card rounded-[28px] p-6 shadow-soft">
+            <h3 class="text-[15px] font-bold mb-5">Collaborators</h3>
+            <div class="flex -space-x-3">
+              <div class="relative group">
+                <img
+                  src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=100"
+                  class="w-12 h-12 rounded-full border-[3px] border-card object-cover cursor-pointer hover:-translate-y-1 transition-transform"
+                />
+                <div
+                  class="pointer-events-none absolute bottom-[calc(100%+10px)] left-1/2 -translate-x-1/2 w-52 bg-gray-900 text-white rounded-2xl p-4 shadow-pop opacity-0 group-hover:opacity-100 transition-opacity z-30"
+                >
+                  <p class="text-[13px] font-bold">Sarah Jenkins</p>
+                  <p class="text-[11px] text-white/60 mt-0.5">
+                    Product Designer
+                  </p>
+                </div>
+              </div>
+              <div class="relative group">
+                <img
+                  src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=100"
+                  class="w-12 h-12 rounded-full border-[3px] border-card object-cover cursor-pointer hover:-translate-y-1 transition-transform"
+                />
+                <div
+                  class="pointer-events-none absolute bottom-[calc(100%+10px)] left-1/2 -translate-x-1/2 w-52 bg-gray-900 text-white rounded-2xl p-4 shadow-pop opacity-0 group-hover:opacity-100 transition-opacity z-30"
+                >
+                  <p class="text-[13px] font-bold">Mark Otto</p>
+                  <p class="text-[11px] text-white/60 mt-0.5">
+                    Frontend Engineer
+                  </p>
+                </div>
+              </div>
+              <div class="relative group">
+                <img
+                  src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=100"
+                  class="w-12 h-12 rounded-full border-[3px] border-card object-cover cursor-pointer hover:-translate-y-1 transition-transform"
+                />
+              </div>
+              <div
+                class="w-12 h-12 rounded-full border-[3px] border-card bg-gray-100 flex items-center justify-center text-[12px] font-extrabold text-gray-500 cursor-pointer hover:bg-gray-200 transition-colors"
+              >
+                +8
+              </div>
+            </div>
+          </div>
+
+          <!-- 25. Stat cards -->
+          <div class="bg-card rounded-[28px] p-6 shadow-soft">
+            <h3 class="text-[15px] font-bold mb-5">Listening Stats</h3>
+            <div class="grid grid-cols-2 gap-4">
+              <div
+                class="bg-purple-50 rounded-[20px] p-4 border border-purple-100"
+              >
+                <i class="ph-fill ph-clock text-primary text-2xl mb-2"></i>
+                <h3 class="text-2xl font-extrabold">
+                  142<span class="text-sm text-gray-500 font-semibold">h</span>
+                </h3>
+                <p
+                  class="text-[11px] font-extrabold text-gray-500 uppercase tracking-wide mt-1"
+                >
+                  Listening time
+                </p>
+              </div>
+              <div class="bg-blue-50 rounded-[20px] p-4 border border-blue-100">
+                <i
+                  class="ph-fill ph-microphone-stage text-blue-500 text-2xl mb-2"
+                ></i>
+                <h3 class="text-2xl font-extrabold">54</h3>
+                <p
+                  class="text-[11px] font-extrabold text-gray-500 uppercase tracking-wide mt-1"
+                >
+                  Artists explored
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- 26. Circular progress -->
+          <div
+            class="bg-card rounded-[28px] p-6 shadow-soft flex flex-col items-center justify-center"
+          >
+            <h3 class="text-[15px] font-bold mb-6 self-start">Storage Used</h3>
+            <div class="relative w-40 h-40">
+              <svg class="w-full h-full -rotate-90" viewBox="0 0 120 120">
+                <circle
+                  cx="60"
+                  cy="60"
+                  r="52"
+                  fill="none"
+                  stroke="#eef0f4"
+                  stroke-width="12"
+                />
+                <circle
+                  id="ringProgress"
+                  cx="60"
+                  cy="60"
+                  r="52"
+                  fill="none"
+                  stroke="#6b4eff"
+                  stroke-width="12"
+                  stroke-linecap="round"
+                  stroke-dasharray="327"
+                  stroke-dashoffset="327"
+                  style="
+                    transition: stroke-dashoffset 1.2s
+                      cubic-bezier(0.4, 0, 0.2, 1);
+                  "
+                />
+              </svg>
+              <div
+                class="absolute inset-0 flex flex-col items-center justify-center"
+              >
+                <span class="text-3xl font-extrabold"
+                  >68<span class="text-base text-gray-400">%</span></span
+                >
+                <span
+                  class="text-[11px] font-bold text-gray-400 uppercase tracking-wider mt-0.5"
+                  >of 200 GB</span
+                >
+              </div>
+            </div>
+          </div>
+
+          <!-- 27. Accordion -->
+          <div class="bg-card rounded-[28px] p-6 shadow-soft">
+            <h3 class="text-[15px] font-bold mb-5">FAQ</h3>
+            <div class="space-y-2" id="accordion">
+              <div
+                class="acc-item border border-gray-100 rounded-2xl overflow-hidden"
+              >
+                <button
+                  class="acc-trigger w-full flex items-center justify-between gap-4 p-4 text-left hover:bg-gray-50 transition-colors"
+                >
+                  <span class="text-[13.5px] font-bold"
+                    >How does lossless streaming work?</span
+                  >
+                  <i
+                    class="ph-bold ph-caret-down acc-icon text-gray-400 transition-transform"
+                  ></i>
+                </button>
+                <div
+                  class="acc-panel grid grid-rows-[0fr] transition-all duration-300"
+                >
+                  <div class="overflow-hidden">
+                    <p
+                      class="px-4 pb-4 text-[13px] text-gray-500 leading-relaxed"
+                    >
+                      Audio is delivered at up to 24-bit/192kHz using FLAC,
+                      decoded natively in the browser via WebCodecs where
+                      supported.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div
+                class="acc-item border border-gray-100 rounded-2xl overflow-hidden"
+              >
+                <button
+                  class="acc-trigger w-full flex items-center justify-between gap-4 p-4 text-left hover:bg-gray-50 transition-colors"
+                >
+                  <span class="text-[13.5px] font-bold"
+                    >Can I download for offline?</span
+                  >
+                  <i
+                    class="ph-bold ph-caret-down acc-icon text-gray-400 transition-transform"
+                  ></i>
+                </button>
+                <div
+                  class="acc-panel grid grid-rows-[0fr] transition-all duration-300"
+                >
+                  <div class="overflow-hidden">
+                    <p
+                      class="px-4 pb-4 text-[13px] text-gray-500 leading-relaxed"
+                    >
+                      Yes — Pro and Duo plans allow up to 10,000 tracks cached
+                      per device, encrypted at rest.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div
+                class="acc-item border border-gray-100 rounded-2xl overflow-hidden"
+              >
+                <button
+                  class="acc-trigger w-full flex items-center justify-between gap-4 p-4 text-left hover:bg-gray-50 transition-colors"
+                >
+                  <span class="text-[13.5px] font-bold"
+                    >Is there a student discount?</span
+                  >
+                  <i
+                    class="ph-bold ph-caret-down acc-icon text-gray-400 transition-transform"
+                  ></i>
+                </button>
+                <div
+                  class="acc-panel grid grid-rows-[0fr] transition-all duration-300"
+                >
+                  <div class="overflow-hidden">
+                    <p
+                      class="px-4 pb-4 text-[13px] text-gray-500 leading-relaxed"
+                    >
+                      Students verified through SheerID receive 50% off any
+                      individual plan for up to four years.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 28. Tabs -->
+          <div class="bg-card rounded-[28px] p-6 shadow-soft">
+            <h3 class="text-[15px] font-bold mb-5">Track Details</h3>
+            <div
+              class="flex gap-1 bg-gray-100 rounded-full p-1 mb-5"
+              id="tabGroup"
+            >
+              <button
+                data-tab-btn="overview"
+                class="tab-btn flex-1 px-3 py-2 rounded-full text-[12.5px] font-bold bg-white text-gray-900 shadow-sm transition-all"
+              >
+                Overview
+              </button>
+              <button
+                data-tab-btn="lyrics"
+                class="tab-btn flex-1 px-3 py-2 rounded-full text-[12.5px] font-bold text-gray-500 hover:text-gray-900 transition-all"
+              >
+                Lyrics
+              </button>
+              <button
+                data-tab-btn="credits"
+                class="tab-btn flex-1 px-3 py-2 rounded-full text-[12.5px] font-bold text-gray-500 hover:text-gray-900 transition-all"
+              >
+                Credits
+              </button>
+            </div>
+            <div data-tab-panel="overview" class="fade-up">
+              <p class="text-[13px] text-gray-500 leading-relaxed">
+                A shimmering synth-pop cut built on a driving arpeggio and a
+                euphoric chorus. Recorded at Electric Lady Studios, New York.
+              </p>
+            </div>
+            <div data-tab-panel="lyrics" class="hidden fade-up">
+              <p class="text-[13px] text-gray-600 leading-relaxed italic">
+                "I'm so intoxicated / I can't believe it / But I know you're the
+                one…"
+              </p>
+            </div>
+            <div data-tab-panel="credits" class="hidden fade-up space-y-2">
+              <div class="flex justify-between text-[13px]">
+                <span class="text-gray-500">Producer</span
+                ><span class="font-bold">Jack Antonoff</span>
+              </div>
+              <div class="flex justify-between text-[13px]">
+                <span class="text-gray-500">Label</span
+                ><span class="font-bold">Republic</span>
+              </div>
+              <div class="flex justify-between text-[13px]">
+                <span class="text-gray-500">Released</span
+                ><span class="font-bold">2019</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================== SECTION 06 ============================== -->
+      <section id="feedback">
+        <div class="flex items-center gap-3 mb-2">
+          <span
+            class="text-[11px] font-extrabold tracking-[0.25em] uppercase text-primary"
+            >06</span
+          >
+          <h2 class="text-2xl font-extrabold tracking-tight">
+            Feedback &amp; States
+          </h2>
+          <div class="flex-1 h-px bg-gray-200"></div>
+        </div>
+        <p class="text-[14px] text-gray-500 mb-8 max-w-2xl">
+          Toasts, alerts, skeletons and empty states to keep users informed.
+        </p>
+
+        <div class="grid md:grid-cols-2 gap-6">
+          <!-- 29. Toasts -->
+          <div class="bg-card rounded-[28px] p-6 shadow-soft">
+            <h3 class="text-[15px] font-bold mb-1">Toast Notifications</h3>
+            <p class="text-[13px] text-gray-500 mb-5">
+              Stack in the top-right, auto-dismiss.
+            </p>
+            <div class="grid grid-cols-2 gap-2">
+              <button
+                data-toast="success"
+                class="rounded-xl py-2.5 text-[12.5px] font-bold bg-green-50 text-green-700 hover:bg-green-100 transition-colors"
+              >
+                Success
+              </button>
+              <button
+                data-toast="error"
+                class="rounded-xl py-2.5 text-[12.5px] font-bold bg-red-50 text-red-700 hover:bg-red-100 transition-colors"
+              >
+                Error
+              </button>
+              <button
+                data-toast="warning"
+                class="rounded-xl py-2.5 text-[12.5px] font-bold bg-amber-50 text-amber-700 hover:bg-amber-100 transition-colors"
+              >
+                Warning
+              </button>
+              <button
+                data-toast="info"
+                class="rounded-xl py-2.5 text-[12.5px] font-bold bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors"
+              >
+                Info
+              </button>
+            </div>
+          </div>
+
+          <!-- 30. Alerts -->
+          <div class="bg-card rounded-[28px] p-6 shadow-soft">
+            <h3 class="text-[15px] font-bold mb-5">Inline Alerts</h3>
+            <div class="space-y-3">
+              <div
+                class="alert flex items-start gap-3 bg-blue-50 border border-blue-100 rounded-2xl p-4"
+              >
+                <i class="ph-fill ph-info text-blue-500 text-lg mt-0.5"></i>
+                <div class="flex-1">
+                  <h4 class="text-[13px] font-bold text-blue-900">
+                    New version available
+                  </h4>
+                  <p class="text-[12px] text-blue-700/80 mt-0.5">
+                    Reload to get the latest features.
+                  </p>
+                </div>
+                <button
+                  class="alert-close text-blue-400 hover:text-blue-700 transition-colors"
+                >
+                  <i class="ph-bold ph-x text-sm"></i>
+                </button>
+              </div>
+              <div
+                class="alert flex items-start gap-3 bg-amber-50 border border-amber-100 rounded-2xl p-4"
+              >
+                <i class="ph-fill ph-warning text-amber-500 text-lg mt-0.5"></i>
+                <div class="flex-1">
+                  <h4 class="text-[13px] font-bold text-amber-900">
+                    Storage almost full
+                  </h4>
+                  <p class="text-[12px] text-amber-700/80 mt-0.5">
+                    You've used 92% of your quota.
+                  </p>
+                </div>
+                <button
+                  class="alert-close text-amber-400 hover:text-amber-700 transition-colors"
+                >
+                  <i class="ph-bold ph-x text-sm"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 31. Skeleton -->
+          <div class="bg-card rounded-[28px] p-6 shadow-soft">
+            <div class="flex items-center justify-between mb-5">
+              <h3 class="text-[15px] font-bold">Skeleton Loading</h3>
+              <button
+                id="reloadSkeleton"
+                class="text-[12px] font-bold text-primary hover:underline"
+              >
+                Replay
+              </button>
+            </div>
+            <div id="skeletonArea" class="space-y-4"></div>
+          </div>
+
+          <!-- 32. Empty state -->
+          <div
+            class="bg-card rounded-[28px] p-8 shadow-soft flex flex-col items-center justify-center text-center min-h-[260px]"
+          >
+            <div
+              class="w-20 h-20 rounded-[28px] bg-primary/10 text-primary flex items-center justify-center mb-5"
+            >
+              <i class="ph-fill ph-music-notes-simple text-4xl"></i>
+            </div>
+            <h3 class="text-[17px] font-extrabold">No tracks yet</h3>
+            <p class="text-[13px] text-gray-500 mt-1.5 mb-6 max-w-[260px]">
+              Your library is empty. Import files or follow an artist to get
+              started.
+            </p>
+            <div class="flex gap-2">
+              <button
+                class="bg-primary text-white rounded-full px-5 py-2.5 text-[13px] font-bold shadow-glow hover:bg-primaryDark transition-colors"
+              >
+                Import files
+              </button>
+              <button
+                class="bg-gray-100 text-gray-700 rounded-full px-5 py-2.5 text-[13px] font-bold hover:bg-gray-200 transition-colors"
+              >
+                Browse
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- ============================================================
+     FOOTER
+     ============================================================ -->
+    <footer class="border-t border-gray-200/70 bg-white/60 backdrop-blur">
+      <div
+        class="max-w-5xl mx-auto px-5 py-8 flex flex-col sm:flex-row items-center justify-between gap-4"
+      >
+        <p class="text-[12.5px] text-gray-500 font-medium">
+          Built with Tailwind CSS, Phosphor Icons &amp; vanilla JS.
+        </p>
+        <div class="flex items-center gap-3 text-gray-400">
+          <a href="#" class="hover:text-primary transition-colors"
+            ><i class="ph-fill ph-github-logo text-xl"></i
+          ></a>
+          <a href="#" class="hover:text-primary transition-colors"
+            ><i class="ph-fill ph-twitter-logo text-xl"></i
+          ></a>
+          <a href="#" class="hover:text-primary transition-colors"
+            ><i class="ph-fill ph-dribbble-logo text-xl"></i
+          ></a>
+        </div>
+      </div>
+    </footer>
+
+    <!-- ============================================================
+     OVERLAY LAYER
+     ============================================================ -->
+    <div
+      id="backdrop"
+      class="hidden fixed inset-0 bg-black/45 backdrop-blur-[3px] z-[95] opacity-0 transition-opacity duration-300"
+    ></div>
+
+    <!-- Modal: Basic -->
+    <div
+      id="modalBasic"
+      class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4"
+    >
+      <div
+        class="modal-panel bg-card rounded-[28px] shadow-pop w-full max-w-md p-6 scale-95 opacity-0 transition-all duration-300"
+      >
+        <div class="flex items-center justify-between mb-5">
+          <h2 class="text-[17px] font-extrabold">Create a new playlist</h2>
+          <button
+            data-close-modal
+            class="text-gray-400 hover:text-gray-900 transition-colors"
+          >
+            <i class="ph ph-x text-xl"></i>
+          </button>
+        </div>
+        <div class="space-y-4">
+          <div>
+            <label
+              class="text-[12px] font-bold text-gray-500 uppercase tracking-wide"
+              >Playlist name</label
+            >
+            <input
+              type="text"
+              value="Late Night Drive"
+              class="mt-1.5 w-full border border-gray-200 rounded-2xl px-4 py-3 text-[14px] font-medium focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all"
+            />
+          </div>
+          <div>
+            <label
+              class="text-[12px] font-bold text-gray-500 uppercase tracking-wide"
+              >Description</label
+            >
+            <textarea
+              rows="3"
+              placeholder="What's this playlist about?"
+              class="mt-1.5 w-full border border-gray-200 rounded-2xl px-4 py-3 text-[14px] resize-none focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 transition-all"
+            ></textarea>
+          </div>
+          <label
+            class="flex items-center justify-between bg-gray-50 rounded-2xl p-3.5 cursor-pointer"
+          >
+            <div>
+              <p class="text-[13.5px] font-bold">Make public</p>
+              <p class="text-[12px] text-gray-500 mt-0.5">
+                Anyone can see it on your profile.
+              </p>
+            </div>
+            <input type="checkbox" checked class="accent-primary w-5 h-5" />
+          </label>
+        </div>
+        <div class="flex gap-3 mt-6">
+          <button
+            data-close-modal
+            class="flex-1 border border-gray-200 rounded-full py-3 text-[13.5px] font-bold text-gray-700 hover:bg-gray-50 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            data-close-modal
+            class="flex-1 bg-primary text-white rounded-full py-3 text-[13.5px] font-bold shadow-glow hover:bg-primaryDark transition-colors"
+          >
+            Create
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal: Confirm -->
+    <div
+      id="modalConfirm"
+      class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4"
+    >
+      <div
+        class="modal-panel bg-card rounded-[28px] shadow-pop w-full max-w-sm p-6 text-center scale-95 opacity-0 transition-all duration-300"
+      >
+        <div
+          class="w-14 h-14 rounded-full bg-red-50 text-red-500 flex items-center justify-center mx-auto mb-4"
+        >
+          <i class="ph-fill ph-trash text-2xl"></i>
+        </div>
+        <h2 class="text-[17px] font-extrabold">Delete this playlist?</h2>
+        <p class="text-[13px] text-gray-500 mt-2 mb-6">
+          This action is permanent. All 102 tracks will be removed from your
+          library.
+        </p>
+        <div class="flex gap-3">
+          <button
+            data-close-modal
+            class="flex-1 border border-gray-200 rounded-full py-3 text-[13.5px] font-bold text-gray-700 hover:bg-gray-50 transition-colors"
+          >
+            Keep it
+          </button>
+          <button
+            data-close-modal
+            class="flex-1 bg-red-500 text-white rounded-full py-3 text-[13.5px] font-bold hover:bg-red-600 transition-colors"
+          >
+            Delete
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sheet: Right (also used for video docking) -->
+    <div
+      id="sheetRight"
+      class="hidden fixed top-0 right-0 h-full w-[min(420px,100vw)] bg-card shadow-pop z-[100] translate-x-full transition-transform duration-300 ease-out flex flex-col"
+    >
+      <div
+        class="flex items-center justify-between p-5 border-b border-gray-100"
+      >
+        <h2 class="text-[16px] font-extrabold">Track Details</h2>
+        <button
+          data-close-sheet
+          class="text-gray-400 hover:text-gray-900 transition-colors"
+        >
+          <i class="ph ph-x text-xl"></i>
+        </button>
+      </div>
+      <div id="sheetVideoSlot" class="p-4"></div>
+      <div class="flex-1 overflow-y-auto p-5 space-y-5">
+        <div class="flex items-center gap-4">
+          <img
+            src="https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?auto=format&fit=crop&q=80&w=150"
+            class="w-16 h-16 rounded-2xl object-cover"
+          />
+          <div>
+            <h3 class="text-[15px] font-bold">Cruel Summer</h3>
+            <p class="text-[13px] text-gray-500">Taylor Swift · Lover</p>
+          </div>
+        </div>
+        <div class="h-px bg-gray-100"></div>
+        <div>
+          <h4
+            class="text-[12px] font-extrabold uppercase tracking-wider text-gray-400 mb-3"
+          >
+            Credits
+          </h4>
+          <div class="space-y-2.5">
+            <div class="flex justify-between text-[13px]">
+              <span class="text-gray-500">Producer</span
+              ><span class="font-bold">Jack Antonoff</span>
+            </div>
+            <div class="flex justify-between text-[13px]">
+              <span class="text-gray-500">Writers</span
+              ><span class="font-bold">Swift, Antonoff, Clark</span>
+            </div>
+            <div class="flex justify-between text-[13px]">
+              <span class="text-gray-500">Label</span
+              ><span class="font-bold">Republic</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="p-5 border-t border-gray-100">
+        <button
+          class="w-full bg-primary text-white rounded-full py-3.5 text-[13.5px] font-bold shadow-glow hover:bg-primaryDark transition-colors"
+        >
+          Add to Library
+        </button>
+      </div>
+    </div>
+
+    <!-- Sheet: Left -->
+    <div
+      id="sheetLeft"
+      class="hidden fixed top-0 left-0 h-full w-[min(320px,85vw)] bg-card shadow-pop z-[100] -translate-x-full transition-transform duration-300 ease-out flex flex-col"
+    >
+      <div class="p-5 flex items-center gap-3 border-b border-gray-100">
+        <div
+          class="w-10 h-10 rounded-[14px] bg-primary text-white flex items-center justify-center shadow-glow"
+        >
+          <i class="ph-fill ph-headphones text-lg"></i>
+        </div>
+        <div>
+          <h2 class="text-[15px] font-extrabold leading-tight">Luister</h2>
+          <p class="text-[11px] text-gray-500 font-semibold">
+            Music for everyone
+          </p>
+        </div>
+      </div>
+      <nav class="flex-1 p-3 space-y-1 overflow-y-auto">
+        <a
+          href="#"
+          class="flex items-center gap-3 px-4 py-3 rounded-2xl bg-primary/10 text-primary font-bold text-[14px]"
+          ><i class="ph-fill ph-house text-lg"></i> Home</a
+        >
+        <a
+          href="#"
+          class="flex items-center gap-3 px-4 py-3 rounded-2xl text-gray-600 hover:bg-gray-50 font-semibold text-[14px] transition-colors"
+          ><i class="ph ph-magnifying-glass text-lg"></i> Search</a
+        >
+        <a
+          href="#"
+          class="flex items-center gap-3 px-4 py-3 rounded-2xl text-gray-600 hover:bg-gray-50 font-semibold text-[14px] transition-colors"
+          ><i class="ph ph-books text-lg"></i> Your Library</a
+        >
+        <a
+          href="#"
+          class="flex items-center gap-3 px-4 py-3 rounded-2xl text-gray-600 hover:bg-gray-50 font-semibold text-[14px] transition-colors"
+          ><i class="ph ph-heart text-lg"></i> Liked Songs</a
+        >
+        <div class="h-px bg-gray-100 my-3"></div>
+        <a
+          href="#"
+          class="flex items-center gap-3 px-4 py-3 rounded-2xl text-gray-600 hover:bg-gray-50 font-semibold text-[14px] transition-colors"
+          ><i class="ph ph-plus-square text-lg"></i> Create Playlist</a
+        >
+        <a
+          href="#"
+          class="flex items-center gap-3 px-4 py-3 rounded-2xl text-gray-600 hover:bg-gray-50 font-semibold text-[14px] transition-colors"
+          ><i class="ph ph-gear text-lg"></i> Settings</a
+        >
+      </nav>
+      <div class="p-5 border-t border-gray-100">
+        <button
+          data-close-sheet
+          class="w-full border border-gray-200 rounded-full py-3 text-[13px] font-bold text-gray-700 hover:bg-gray-50 transition-colors"
+        >
+          Close
+        </button>
+      </div>
+    </div>
+
+    <!-- Offcanvas: Bottom (also used for video docking) -->
+    <div
+      id="offcanvasBottom"
+      class="hidden fixed bottom-0 left-0 right-0 bg-card rounded-t-[28px] shadow-pop z-[100] translate-y-full transition-transform duration-300 ease-out max-h-[85vh] flex flex-col"
+    >
+      <div class="pt-3 pb-2 flex justify-center flex-shrink-0">
+        <div class="w-10 h-1.5 bg-gray-200 rounded-full"></div>
+      </div>
+      <div class="flex items-center justify-between px-5 pb-4 flex-shrink-0">
+        <h2 class="text-[16px] font-extrabold">Share track</h2>
+        <button
+          data-close-sheet
+          class="text-gray-400 hover:text-gray-900 transition-colors"
+        >
+          <i class="ph ph-x text-xl"></i>
+        </button>
+      </div>
+      <div id="offcanvasVideoSlot" class="px-5"></div>
+      <div class="overflow-y-auto px-5 pb-6">
+        <div class="grid grid-cols-4 gap-4 mb-6">
+          <button class="flex flex-col items-center gap-2 group">
+            <span
+              class="w-14 h-14 rounded-full bg-[#25D366]/10 text-[#25D366] flex items-center justify-center group-hover:bg-[#25D366] group-hover:text-white transition-all"
+            >
+              <i class="ph-fill ph-whatsapp-logo text-2xl"></i>
+            </span>
+            <span class="text-[11px] font-bold text-gray-600">WhatsApp</span>
+          </button>
+          <button class="flex flex-col items-center gap-2 group">
+            <span
+              class="w-14 h-14 rounded-full bg-[#1DA1F2]/10 text-[#1DA1F2] flex items-center justify-center group-hover:bg-[#1DA1F2] group-hover:text-white transition-all"
+            >
+              <i class="ph-fill ph-twitter-logo text-2xl"></i>
+            </span>
+            <span class="text-[11px] font-bold text-gray-600">Twitter</span>
+          </button>
+          <button class="flex flex-col items-center gap-2 group">
+            <span
+              class="w-14 h-14 rounded-full bg-[#E1306C]/10 text-[#E1306C] flex items-center justify-center group-hover:bg-[#E1306C] group-hover:text-white transition-all"
+            >
+              <i class="ph-fill ph-instagram-logo text-2xl"></i>
+            </span>
+            <span class="text-[11px] font-bold text-gray-600">Stories</span>
+          </button>
+          <button class="flex flex-col items-center gap-2 group">
+            <span
+              class="w-14 h-14 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center group-hover:bg-gray-200 transition-all"
+            >
+              <i class="ph-fill ph-dots-three text-2xl"></i>
+            </span>
+            <span class="text-[11px] font-bold text-gray-600">More</span>
+          </button>
+        </div>
+        <div
+          class="flex items-center gap-2 bg-gray-50 border border-gray-100 rounded-2xl p-1.5"
+        >
+          <input
+            type="text"
+            readonly
+            value="https://luister.com/t/9x81n2"
+            class="bg-transparent flex-1 px-3 text-[13px] text-gray-600 focus:outline-none"
+          />
+          <button
+            class="bg-white border border-gray-200 px-4 py-2 rounded-xl text-[12.5px] font-bold shadow-sm hover:bg-gray-50 transition-colors"
+          >
+            Copy
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Command Palette -->
+    <div
+      id="commandPalette"
+      class="hidden fixed inset-0 z-[110] flex items-start justify-center pt-[12vh] px-4"
+    >
+      <div
+        class="cmd-panel w-full max-w-xl bg-card rounded-[24px] shadow-pop overflow-hidden scale-95 opacity-0 transition-all duration-200"
+      >
+        <div class="flex items-center gap-3 p-4 border-b border-gray-100">
+          <i class="ph ph-magnifying-glass text-xl text-gray-400"></i>
+          <input
+            id="cmdInput"
+            type="text"
+            placeholder="Search for commands, settings or users…"
+            class="flex-1 bg-transparent text-[14px] focus:outline-none"
+          />
+          <span
+            class="bg-gray-100 text-gray-400 text-[10px] font-bold px-2 py-1 rounded-md border border-gray-200"
+            >ESC</span
+          >
+        </div>
+        <div class="p-2 max-h-[360px] overflow-y-auto">
+          <div
+            class="px-3 py-2 text-[10.5px] font-extrabold text-gray-400 uppercase tracking-widest"
+          >
+            Recent
+          </div>
+          <button
+            class="cmd-item w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors text-left"
+          >
+            <span
+              class="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center"
+              ><i class="ph-fill ph-users"></i
+            ></span>
+            <span class="flex-1">
+              <span class="block text-[13.5px] font-bold">Team Management</span>
+              <span class="block text-[11.5px] text-gray-500"
+                >Dashboard › Settings</span
+              >
+            </span>
+            <i class="ph ph-arrow-bend-down-left text-gray-300"></i>
+          </button>
+          <button
+            class="cmd-item w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors text-left"
+          >
+            <span
+              class="w-9 h-9 rounded-xl bg-purple-50 text-primary flex items-center justify-center"
+              ><i class="ph-fill ph-music-notes"></i
+            ></span>
+            <span class="flex-1">
+              <span class="block text-[13.5px] font-bold">Now Playing</span>
+              <span class="block text-[11.5px] text-gray-500"
+                >Player › Queue</span
+              >
+            </span>
+            <i class="ph ph-arrow-bend-down-left text-gray-300"></i>
+          </button>
+
+          <div
+            class="px-3 py-2 text-[10.5px] font-extrabold text-gray-400 uppercase tracking-widest mt-2"
+          >
+            Actions
+          </div>
+          <button
+            class="cmd-item w-full flex items-center gap-3 p-3 rounded-xl bg-primary text-white shadow-md text-left"
+          >
+            <span
+              class="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center"
+              ><i class="ph-bold ph-plus"></i
+            ></span>
+            <span class="flex-1 text-[13.5px] font-bold"
+              >Create New Playlist</span
+            >
+            <i class="ph ph-arrow-bend-down-left text-white/60"></i>
+          </button>
+          <button
+            class="cmd-item w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors text-left"
+          >
+            <span
+              class="w-9 h-9 rounded-xl bg-gray-100 text-gray-600 flex items-center justify-center"
+              ><i class="ph ph-envelope-simple"></i
+            ></span>
+            <span class="flex-1 text-[13.5px] font-bold">Invite a friend</span>
+          </button>
+          <button
+            class="cmd-item w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors text-left"
+          >
+            <span
+              class="w-9 h-9 rounded-xl bg-gray-100 text-gray-600 flex items-center justify-center"
+              ><i class="ph ph-moon-stars"></i
+            ></span>
+            <span class="flex-1 text-[13.5px] font-bold">Toggle dark mode</span>
+          </button>
+        </div>
+        <div
+          class="bg-gray-50 p-3 border-t border-gray-100 flex justify-between items-center text-[11px] text-gray-500 font-medium"
+        >
+          <span
+            ><kbd
+              class="font-sans bg-white px-1.5 py-0.5 rounded border border-gray-200"
+              >↑</kbd
+            >
+            <kbd
+              class="font-sans bg-white px-1.5 py-0.5 rounded border border-gray-200"
+              >↓</kbd
+            >
+            navigate</span
+          >
+          <span
+            ><kbd
+              class="font-sans bg-white px-1.5 py-0.5 rounded border border-gray-200"
+              >↵</kbd
+            >
+            select</span
+          >
+        </div>
+      </div>
+    </div>
+
+    <!-- Context menu -->
+    <div
+      id="contextMenu"
+      class="hidden fixed z-[120] w-56 bg-card rounded-2xl shadow-pop border border-gray-100 p-1.5 fade-up"
+    ></div>
+
+  </body>
+</html>
