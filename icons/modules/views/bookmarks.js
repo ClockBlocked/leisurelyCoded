@@ -15,7 +15,8 @@
      • Empty state with a CTA back to Home
    ============================================================ */
 
-import { el, mount, download, toast, debounce } from "../utils.js";
+import { el, mount, download, debounce } from "../utils.js";
+import { toast } from "../toast.js";
 import { registry } from "../sprite.js";
 import { data }     from "../data.js";
 import { store }    from "../store.js";
