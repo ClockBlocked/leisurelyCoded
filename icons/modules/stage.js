@@ -558,3 +558,12 @@ function cssEscape(str) {
 }
 
 const raf = () => new Promise((r) => requestAnimationFrame(r));
+
+
+
+export const stage = {
+  init,
+  open,
+  close,
+  isOpen,
+};
