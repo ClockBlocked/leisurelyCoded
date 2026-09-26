@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Icon Forge — Font Awesome Library</title>
+  <meta name="description" content="A smooth, searchable Font Awesome icon library." />
+  <link rel="stylesheet" href="./ui/style.css" />
+</head>
+
+<body>
+  <!-- ══ Full-page loading bar ══════════════════════════════ -->
+  <div class="progress" id="progress" aria-hidden="true">
+    <div class="progress__bar" id="progressBar"></div>
+  </div>
+
+  <!-- ══ Sprite symbol mount (populated at boot) ════════════ -->
+  <svg id="sprite-mount" aria-hidden="true"
+       style="position:absolute;width:0;height:0;overflow:hidden"></svg>
+
+  <!-- ══ Chrome: top bar + style bar ════════════════════════ -->
+  <header class="chrome">
+    <div class="topbar">
+      <a class="brand" href="#/">
+        <span class="brand__mark" aria-hidden="true">✦</span>
+        <span class="brand__text">Icon&nbsp;<em>Forge</em></span>
+      </a>
+
+      <nav class="topnav" id="topnav" aria-label="Primary"></nav>
+
+      <div class="topbar__tools">
+        <label class="searchbox">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="1.9" stroke-linecap="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="7"/>
+            <path d="m20 20-3.6-3.6"/>
+          </svg>
+          <input type="search" id="searchInput" placeholder="Search icons…"
+                 autocomplete="off" spellcheck="false" aria-label="Search icons" />
+          <kbd>/</kbd>
+        </label>
+
+        <button class="ghost-btn" id="themeBtn" type="button" aria-label="Toggle color theme">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"
+               aria-hidden="true">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z" />
+          </svg>
+          <span id="themeLabel">Light</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Style / variety nav (fragment-level) -->
+    <nav class="stylenav" id="stylenav" aria-label="Icon varieties"></nav>
+  </header>
+
+  <!-- ══ View + spinner overlay ═════════════════════════════ -->
+  <div class="view-wrap">
+    <main id="view" class="view" role="main"></main>
+
+    <div class="spinner-overlay" id="spinner" hidden>
+      <div class="loader" role="status" aria-live="polite">
+        <svg class="loader__ring" viewBox="0 0 50 50" aria-hidden="true">
+          <circle class="loader__track" cx="25" cy="25" r="20" />
+          <circle class="loader__arc"   cx="25" cy="25" r="20" />
+        </svg>
+        <span class="loader__text" id="loaderText">Loading…</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ Icon detail stage ══════════════════════════════════ -->
+  <div class="stage" id="stage" hidden>
+    <div class="stage__scrim" data-close></div>
+    <div class="stage__glow" aria-hidden="true"></div>
+
+    <div class="stage__panel" role="dialog" aria-modal="true" aria-labelledby="stageTitle">
+      <div class="stage__head">
+        <h2 class="stage__title" id="stageTitle">Icon</h2>
+        <p class="stage__sub" id="stageSub">Solid</p>
+      </div>
+
+      <div class="stage__icon" id="stageIcon"></div>
+
+      <div class="stage__controls">
+        <div class="swatches" id="swatches" role="group" aria-label="Icon color"></div>
+
+        <label class="stroke-control">
+          Weight
+          <input type="range" id="strokeRange" min="0" max="3" step="0.25" value="0"
+                 aria-label="Stroke weight" />
+          <span class="stroke-value" id="strokeValue">auto</span>
+        </label>
+
+        <button class="ghost-btn" id="bookmarkBtn" type="button" aria-pressed="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"
+               aria-hidden="true">
+            <path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1Z" />
+          </svg>
+          <span id="bookmarkLabel">Bookmark</span>
+        </button>
+      </div>
+
+      <div class="stage__actions" id="actions"></div>
+    </div>
+
+    <div class="stage__nav">
+      <button class="nav-btn" type="button" id="prevBtn" aria-label="Previous icon (Left arrow)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"
+             aria-hidden="true">
+          <path d="m15 5-7 7 7 7" />
+        </svg>
+      </button>
+      <button class="nav-btn" type="button" id="nextBtn" aria-label="Next icon (Right arrow)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"
+             aria-hidden="true">
+          <path d="m9 5 7 7-7 7" />
+        </svg>
+      </button>
+    </div>
+
+    <button class="stage__close" type="button" id="closeBtn" aria-label="Close (Escape)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"
+           aria-hidden="true">
+        <path d="M18 6 6 18M6 6l12 12" />
+      </svg>
+    </button>
+  </div>
+
+  <!-- ══ Toast ══════════════════════════════════════════════ -->
+  <div class="toast" id="toast" role="status" aria-live="polite">
+    <span class="toast__dot"></span>
+    <span id="toastMsg">Copied</span>
+  </div>
+
+  <!-- ══ App entry point ═══════════════════════════════════ -->
+  <script type="module" src="./modules/app.js"></script>
+</body>
+</html>
