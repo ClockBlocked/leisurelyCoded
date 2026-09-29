@@ -20,6 +20,10 @@ import { router } from "./router.js";
 import { toggle as togglePalette } from "./palette.js";
 
 import { VARIETY_GROUPS, VARIETY_GROUP_LABELS } from "./config.js";
+import { registry } from "./sprite.js";
+import { invalidate } from "./data.js";
+import { toast } from "./toast.js";
+
 
 /* ============================================================
    DOM REFS
@@ -137,6 +141,9 @@ function renderStyleNav() {
   syncStyleNav(store.variety.current());
   queueMicrotask(() => scrollActiveIntoView("instant"));
 }
+
+
+
 
 function isPrimary(key) {
   const coreAndSharp = [
