@@ -27,7 +27,7 @@ import { spinner }    from "./spinner.js";
 import { toast }      from "./toast.js";
 import { theme }      from "./theme.js";
 import { loadSprites, registry } from "./sprite.js";
-import { buildIndex, data }      from "./data.js";
+import { buildIndex, invalidate, data } from "./data.js";
 import { store }      from "./store.js";
 import { collections } from "./collections.js";
 import { router }     from "./router.js";
