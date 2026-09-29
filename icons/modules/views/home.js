@@ -278,12 +278,13 @@ function varietyGlyph(key) {
     stroke="currentColor" aria-hidden="true">${d}</svg>`;
 }
 
-/* ============================================================
-   CURRENT VARIETY FULL GRID
-   ============================================================ */
+
+const PAGE_SIZE = 150;
+
 function sectionCurrentVariety() {
   const variety = store.variety.current();
   const names = data.varietyNames(variety);
+
   if (!names.length) {
     return el("section", { cls: "section" },
       emptyState(
@@ -294,23 +295,57 @@ function sectionCurrentVariety() {
   }
 
   const grid = el("div", { cls: "grid", role: "list" });
-  names.forEach((name, i) => grid.append(tile(variety, name, i)));
+  const sentinel = el("div", {
+    attrs: { "aria-hidden": "true" },
+    style: { height: "1px", marginTop: "24px" },
+  });
+
+  const wrapper = el("div", { cls: "variety-grid-wrap" }, grid, sentinel);
+
+  let rendered = 0;
+  const total = names.length;
+
+  function renderMore() {
+    const end = Math.min(rendered + PAGE_SIZE, total);
+    const slice = names.slice(rendered, end);
+    slice.forEach((name, i) =>
+      grid.append(tile(variety, name, rendered + i))
+    );
+    rendered = end;
+
+    if (rendered >= total) {
+      observer.disconnect();
+      sentinel.remove();
+    }
+  }
+
+  // Initial render.
+  renderMore();
+
+  // Infinite scroll.
+  const observer = new IntersectionObserver(
+    (entries) => {
+      for (const e of entries) {
+        if (e.isIntersecting) renderMore();
+      }
+    },
+    { rootMargin: "400px 0px" }
+  );
+  observer.observe(sentinel);
 
   return el("section", { cls: "section" },
     sectionBar({
       title: prettyVariety(variety),
-      subtitle: `${names.length} icon${names.length === 1 ? "" : "s"}`,
+      subtitle: `${total} icon${total === 1 ? "" : "s"}`,
       tools: [
         chip("Bookmarks", "view-bm", () => router.go("/bookmarks")),
       ],
     }),
-    grid,
+    wrapper,
   );
 }
 
-/* ============================================================
-   SHARED PIECES
-   ============================================================ */
+
 
 /** Icon tile — the atomic unit of every grid. */
 export function tile(variety, name, i) {
