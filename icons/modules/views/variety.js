@@ -1,52 +1,50 @@
-
-
-
-
-
 /* ============================================================
-   ICON FORGE — js/views/variety.js
-   Single variety page. Big banner at the top, full grid below,
-   plus an in-page filter box and cross-links to sibling
-   varieties for quick side-by-side comparison.
+   modules/views/variety.js
    ============================================================ */
 
-import { el, mount, debounce, prettyIconName } from "../utils.js";
+import { el, mount, debounce } from "../utils.js";
 import { registry } from "../sprite.js";
-import { data }     from "../data.js";
-import { store }    from "../store.js";
-import { router }   from "../router.js";
+import { data, invalidate } from "../data.js";
+import { store } from "../store.js";
+import { router } from "../router.js";
+import { toast } from "../toast.js";
 import { tile, emptyState } from "./home.js";
+import { UI } from "../config.js";
 
-/* ============================================================
-   ENTRY
-   ============================================================ */
+const PAGE_SIZE = UI.pageSize;
+
 export async function render(container, route) {
   const key = route.params?.key;
   const meta = data.varieties().find((v) => v.key === key);
 
-  if (!meta || !meta.available) {
-    mount(container,
-      el("div", { cls: "view-variety" },
-        emptyState(
-          "Variety unavailable",
-          `“${key}” doesn't seem to be loaded. It may have failed to fetch, ` +
-          `or it may not exist in your sprite folder.`,
-          { label: "See all varieties", onClick: () => router.go("/varieties") },
-        ),
-      ),
-    );
+  if (!meta) {
+    mount(container, el("div", { cls: "view-variety" },
+      emptyState("Variety not found", `"${key}" doesn't exist in your manifest.`,
+        { label: "See all varieties", onClick: () => router.go("/varieties") }),
+    ));
     return;
+  }
+
+  // Make sure it's loaded before rendering.
+  if (!registry.isLoaded(key)) {
+    try {
+      await registry.ensure(key);
+      invalidate();
+    } catch {
+      mount(container, el("div", { cls: "view-variety" },
+        emptyState("Variety unavailable", `"${key}" failed to load.`,
+          { label: "See all varieties", onClick: () => router.go("/varieties") }),
+      ));
+      return;
+    }
   }
 
   const names = data.varietyNames(key);
   const isCurrent = store.variety.current() === key;
   const siblingKeys = data.varieties()
-    .filter((v) => v.available && v.key !== key)
-    .slice(0, 6)
-    .map((v) => v.key);
+    .filter((v) => v.loaded && v.key !== key).slice(0, 6).map((v) => v.key);
 
   const view = el("div", { cls: "view-variety" });
-
   view.append(
     breadcrumb([
       { label: "Varieties", href: "/varieties" },
@@ -57,55 +55,34 @@ export async function render(container, route) {
     searchRow(),
     el("div", { id: "variety-tiles" }, buildTiles(key, names)),
   );
-
   mount(container, view);
 
-  // Wire up the local filter
   const input = view.querySelector("#variety-filter");
-  const wrap  = view.querySelector("#variety-tiles");
+  const wrap = view.querySelector("#variety-tiles");
   if (input) {
     const run = debounce(() => {
       const q = input.value.trim().toLowerCase();
-      const filtered = q
-        ? names.filter((n) => n.toLowerCase().includes(q))
-        : names;
+      const filtered = q ? names.filter((n) => n.toLowerCase().includes(q)) : names;
       mount(wrap, buildTiles(key, filtered));
     }, 120);
-
     input.addEventListener("input", run);
     input.addEventListener("keydown", (e) => {
       if (e.key === "Escape") { input.value = ""; run(); }
     });
   }
 
-  // If this isn't the active variety yet, quietly adopt it so
-  // the top nav reflects where the user is.
   if (!isCurrent) store.variety.set(key);
 }
 
-/* ============================================================
-   PIECES
-   ============================================================ */
 function breadcrumb(items) {
-  const list = el("nav", {
-    cls: "breadcrumb",
-    attrs: {
-      "aria-label": "Breadcrumb",
-      style:
-        "display:flex;gap:8px;font-size:.75rem;color:var(--text-faint);margin-bottom:18px",
-    },
-  });
+  const list = el("nav", { cls: "breadcrumb",
+    attrs: { "aria-label": "Breadcrumb",
+      style: "display:flex;gap:8px;font-size:.75rem;color:var(--text-faint);margin-bottom:18px" } });
   items.forEach((item, i) => {
     if (i) list.append(el("span", { text: "/", attrs: { "aria-hidden": "true" } }));
-    if (item.href) {
-      list.append(el("a", {
-        text: item.label,
-        attrs: { href: "#" + item.href },
-        style: { color: "var(--text-dim)" },
-      }));
-    } else {
-      list.append(el("strong", { text: item.label, style: { color: "var(--text)" } }));
-    }
+    if (item.href) list.append(el("a", { text: item.label, attrs: { href: "#" + item.href },
+      style: { color: "var(--text-dim)" } }));
+    else list.append(el("strong", { text: item.label, style: { color: "var(--text)" } }));
   });
   return list;
 }
@@ -128,52 +105,31 @@ function banner(key, meta, isCurrent) {
         el("span", { cls: "variety-banner__name", text: prettyVariety(key) }),
       ),
       el("span", { cls: "variety-banner__count",
-        text: `${meta.count} icon${meta.count === 1 ? "" : "s"}`,
-      }),
+        text: `${meta.count} icon${meta.count === 1 ? "" : "s"}` }),
     ),
-    el("p", { cls: "variety-banner__blurb", text: blurbFor(key) }),
+    el("p", { cls: "variety-banner__blurb", text: meta.blurb || blurbFor(key) }),
     previewStrip,
-    isCurrent
-      ? el("span", { cls: "variety-banner__badge", text: "Active variety" })
-      : null,
+    isCurrent ? el("span", { cls: "variety-banner__badge", text: "Active variety" }) : null,
   );
 }
 
 function siblingRow(keys) {
   if (!keys.length) return document.createComment("no-siblings");
-
-  const row = el("div", {
-    cls: "sibling-row",
-    attrs: { style:
-      "display:flex;gap:8px;flex-wrap:wrap;margin:20px 0 4px;align-items:center" },
-  });
-
-  row.append(el("span", {
-    text: "Switch:",
-    style: {
-      "font-size": ".72rem",
-      "font-weight": "600",
-      "letter-spacing": ".08em",
-      "text-transform": "uppercase",
-      color: "var(--text-faint)",
-      "margin-right": "4px",
-    },
-  }));
-
+  const row = el("div", { cls: "sibling-row",
+    attrs: { style: "display:flex;gap:8px;flex-wrap:wrap;margin:20px 0 4px;align-items:center" } });
+  row.append(el("span", { text: "Switch:",
+    style: { "font-size": ".72rem", "font-weight": "600", "letter-spacing": ".08em",
+      "text-transform": "uppercase", color: "var(--text-faint)", "margin-right": "4px" } }));
   for (const k of keys) {
     row.append(el("button", {
-      cls: "chip",
-      type: "button",
-      text: prettyVariety(k),
-      on: {
-        click: () => {
-          store.variety.set(k);
-          router.go(`/varieties/${k}`);
-        },
-      },
+      cls: "chip", type: "button", text: prettyVariety(k),
+      on: { click: async () => {
+        if (!registry.isLoaded(k)) await registry.ensure(k);
+        store.variety.set(k);
+        router.go(`/varieties/${k}`);
+      } },
     }));
   }
-
   return row;
 }
 
@@ -186,42 +142,26 @@ function searchRow() {
           const w = el("span", { html:
             `<svg viewBox="0 0 24 24" width="15" height="15" fill="none"
               stroke="currentColor" stroke-width="1.9" stroke-linecap="round"
-              aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.6-3.6"/></svg>`,
-          });
+              aria-hidden="true"><circle cx="11" cy="11" r="7"/>
+              <path d="m20 20-3.6-3.6"/></svg>` });
           return w.firstChild;
         })(),
-        el("input", {
-          attrs: {
-            id: "variety-filter",
-            type: "search",
-            placeholder: "Filter this variety…",
-            autocomplete: "off",
-            spellcheck: "false",
-            "aria-label": "Filter icons in this variety",
-          },
-        }),
+        el("input", { attrs: { id: "variety-filter", type: "search",
+          placeholder: "Filter this variety…", autocomplete: "off",
+          spellcheck: "false", "aria-label": "Filter icons in this variety" } }),
       ),
     ),
   );
 }
 
-
-
-const PAGE_SIZE = 150;
-
 function buildTiles(variety, names) {
   if (!names.length) {
-    return emptyState(
-      "No matches",
-      "Try a different filter — or clear the input with Escape.",
-    );
+    return emptyState("No matches", "Try a different filter — or clear the input with Escape.");
   }
 
   const grid = el("div", { cls: "grid", role: "list" });
-  const sentinel = el("div", {
-    attrs: { "aria-hidden": "true" },
-    style: { height: "1px", marginTop: "24px" },
-  });
+  const sentinel = el("div", { attrs: { "aria-hidden": "true" },
+    style: { height: "1px", marginTop: "24px" } });
   const wrapper = el("div", { cls: "variety-grid-wrap" }, grid, sentinel);
 
   let rendered = 0;
@@ -230,32 +170,19 @@ function buildTiles(variety, names) {
   function renderMore() {
     const end = Math.min(rendered + PAGE_SIZE, total);
     const slice = names.slice(rendered, end);
-    slice.forEach((name, i) =>
-      grid.append(tile(variety, name, rendered + i))
-    );
+    slice.forEach((name, i) => grid.append(tile(variety, name, rendered + i)));
     rendered = end;
-    if (rendered >= total) {
-      observer.disconnect();
-      sentinel.remove();
-    }
+    if (rendered >= total) { observer.disconnect(); sentinel.remove(); }
   }
 
-  renderMore();
-
   const observer = new IntersectionObserver(
-    (entries) => {
-      for (const e of entries) {
-        if (e.isIntersecting) renderMore();
-      }
-    },
-    { rootMargin: "400px 0px" }
+    (entries) => { for (const e of entries) if (e.isIntersecting) renderMore(); },
+    { rootMargin: "600px 0px" }
   );
+  renderMore();
   observer.observe(sentinel);
-
   return wrapper;
 }
-
-
 
 function prettyVariety(key) {
   return key.split("-").map((s) => s[0].toUpperCase() + s.slice(1)).join(" ");
@@ -263,15 +190,15 @@ function prettyVariety(key) {
 
 function blurbFor(key) {
   const map = {
-    solid:   "Bold, filled shapes with the most visual weight. The workhorse of the set.",
-    regular: "Refined line icons with a lighter, airier feel — perfect for dense UI.",
-    sharp:   "Crisp corners and precise angles, engineered for editor chrome.",
-    light:   "Airy hairlines that whisper rather than shout.",
-    thin:    "Featherweight strokes. Elegant at scale, legible when small.",
-    duotone: "Two-tone depth that makes icons pop off the page.",
-    brands:  "Logos for social platforms, tools, and third-party integrations.",
+    solid: "Bold, filled shapes.",
+    regular: "Refined line icons.",
+    sharp: "Crisp corners.",
+    light: "Airy hairlines.",
+    thin: "Featherweight strokes.",
+    duotone: "Two-tone depth.",
+    brands: "Logos for social.",
   };
-  return map[key] || "A distinct visual style within the Font Awesome family.";
+  return map[key] || "A distinct visual style.";
 }
 
 function glyphFor(key) {
