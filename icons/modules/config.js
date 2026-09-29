@@ -425,3 +425,40 @@ export const FALLBACK_SYMBOLS = {
   folder: "M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z",
   github: "M12 2a10 10 0 0 0-3.2 19.5c.5.1.7-.2.7-.5v-2c-2.8.6-3.4-1.2-3.4-1.2-.5-1.2-1.1-1.5-1.1-1.5-.9-.6.1-.6.1-.6 1 .1 1.5 1 1.5 1 .9 1.5 2.4 1.1 3 .8.1-.6.4-1.1.6-1.4-2.2-.3-4.6-1.1-4.6-5 0-1.1.4-2 1-2.7-.1-.3-.4-1.3.1-2.7 0 0 .8-.3 2.7 1a9.4 9.4 0 0 1 5 0c1.9-1.3 2.7-1 2.7-1 .5 1.4.2 2.4.1 2.7.6.7 1 1.6 1 2.7 0 3.9-2.4 4.7-4.6 5 .4.3.7.9.7 1.9v2.8c0 .3.2.6.7.5A10 10 0 0 0 12 2z",
 };
+
+
+/* ------------------------------------------------------------
+   VARIETY GROUPING
+   ------------------------------------------------------------
+   Controls which varieties appear in the top style nav vs.
+   behind a "More styles" affordance.
+     • primary → always visible in the style nav
+     • other   → grouped into "More" (or shown when a category
+                 is set to "All varieties")
+   Manifest entries can override via "primary": true|false.
+   ------------------------------------------------------------ */
+export const VARIETY_GROUPS = {
+  core:    ["solid", "regular", "light", "thin", "duotone", "brands"],
+  sharp:   ["sharp-solid", "sharp-regular", "sharp-light", "sharp-thin",
+            "sharp-duotone-solid", "sharp-duotone-regular",
+            "sharp-duotone-light", "sharp-duotone-thin"],
+  duotone: ["duotone-regular", "duotone-light", "duotone-thin"],
+  slab:    ["slab-regular", "slab-press-regular", "slab-duo-regular",
+            "slab-press-duo-regular"],
+  jelly:   ["jelly-regular", "jelly-fill-regular", "jelly-duo-regular"],
+  utility: ["utility-semibold", "utility-fill-semibold", "utility-duo-semibold"],
+  families:["whiteboard-semibold", "thumbprint-light", "notdog-solid",
+            "notdog-duo-solid", "vellum-solid", "mosaic-solid",
+            "pixel-regular", "graphite-thin", "etch-solid", "chiseled-regular"],
+};
+
+/* Pretty group labels for the "More styles" popover. */
+export const VARIETY_GROUP_LABELS = {
+  core:     "Core styles",
+  sharp:    "Sharp family",
+  duotone:  "Duotone variants",
+  slab:     "Slab family",
+  jelly:    "Jelly family",
+  utility:  "Utility family",
+  families: "Icon families",
+};
