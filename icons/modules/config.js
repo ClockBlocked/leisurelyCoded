@@ -24,7 +24,7 @@ export const SPRITES = {
   defaultBase: "https://clockblocked.github.io/leisurelyCoded/icons/fontawesome/sprites/",
   defaultCandidates: [
     { key: "solid",                 file: "solid.svg",                 label: "Solid" },
-/**    { key: "regular",               file: "regular.svg",               label: "Regular" },
+    { key: "regular",               file: "regular.svg",               label: "Regular" },
     { key: "light",                 file: "light.svg",                 label: "Light" },
     { key: "thin",                  file: "thin.svg",                  label: "Thin" },
     { key: "duotone",               file: "duotone.svg",               label: "Duotone" },
@@ -60,7 +60,7 @@ export const SPRITES = {
     { key: "graphite-thin",         file: "graphite-thin.svg",         label: "Graphite" },
     { key: "etch-solid",            file: "etch-solid.svg",            label: "Etch" },
     { key: "chiseled-regular",      file: "chiseled-regular.svg",      label: "Chiseled" },
-    **/
+    
   ],
 };
 
