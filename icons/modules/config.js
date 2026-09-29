@@ -29,7 +29,7 @@ export const SPRITES = {
     { key: "thin",                  file: "thin.svg",                  label: "Thin" },
     { key: "duotone",               file: "duotone.svg",               label: "Duotone" },
     { key: "brands",                file: "brands.svg",                label: "Brands" },
-    { key: "sharp-solid",           file: "sharp-solid.svg",           label: "Sharp Solid" },
+/**    { key: "sharp-solid",           file: "sharp-solid.svg",           label: "Sharp Solid" },
     { key: "sharp-regular",         file: "sharp-regular.svg",         label: "Sharp Regular" },
     { key: "sharp-light",           file: "sharp-light.svg",           label: "Sharp Light" },
     { key: "sharp-thin",            file: "sharp-thin.svg",            label: "Sharp Thin" },
@@ -60,6 +60,7 @@ export const SPRITES = {
     { key: "graphite-thin",         file: "graphite-thin.svg",         label: "Graphite" },
     { key: "etch-solid",            file: "etch-solid.svg",            label: "Etch" },
     { key: "chiseled-regular",      file: "chiseled-regular.svg",      label: "Chiseled" },
+    **/
   ],
 };
 
