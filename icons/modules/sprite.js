@@ -109,7 +109,6 @@ export async function loadSprites({ initial = null, onProgress } = {}) {
   if (initial && state.varieties[initial]) {
     await ensure(initial);
   } else if (discovered.length) {
-    // Load the first variety by default
     await ensure(discovered[0].key);
   }
 
@@ -129,7 +128,7 @@ export async function ensure(key) {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const text = await res.text();
       if (!/<svg[\s>]/i.test(text)) throw new Error("not an SVG sprite");
-      await ingestSprite(key, text, v.url);  // ← Await it now
+      await ingestSprite(key, text, v.url);
       v.loaded = true;
       v.available = v.count > 0;
       v.error = v.count > 0 ? null : "no symbols";
@@ -153,7 +152,7 @@ export async function ensure(key) {
   return state.ensurePromises[key];
 }
 
-function ingestSprite(variety, svgText, url) {
+async function ingestSprite(variety, svgText, url) {
   const doc = PARSER.parseFromString(svgText, "image/svg+xml");
   if (doc.querySelector("parsererror"))
     throw new Error(`XML parse error in ${url}`);
@@ -162,58 +161,38 @@ function ingestSprite(variety, svgText, url) {
   const icons = [];
   let count = 0;
 
-  // Process symbols in batches to avoid blocking the main thread
-  const BATCH_SIZE = 100;
-  let batchIndex = 0;
+  for (const sym of symbols) {
+    const originalId = sym.getAttribute("id") || "";
+    if (!originalId) continue;
 
-  return new Promise((resolve) => {
-    function processBatch() {
-      const start = batchIndex * BATCH_SIZE;
-      const end = Math.min(start + BATCH_SIZE, symbols.length);
+    const name = extractIconName(originalId);
+    if (!name) continue;
 
-      for (let i = start; i < end; i++) {
-        const sym = symbols[i];
-        const originalId = sym.getAttribute("id") || "";
-        if (!originalId) continue;
+    const safeId = makeSafeId(variety, name);
+    if (state.symbols[safeId]) continue;
 
-        const name = extractIconName(originalId);
-        if (!name) continue;
+    const viewBox = sym.getAttribute("viewBox") || "0 0 512 512";
+    const inner = serializeSymbolInner(sym);
 
-        const safeId = makeSafeId(variety, name);
-        if (state.symbols[safeId]) continue;
+    state.symbols[safeId] = {
+      safeId,
+      originalId,
+      variety,
+      name,
+      viewBox,
+      innerHTML: inner,
+      node: null,
+    };
 
-        const viewBox = sym.getAttribute("viewBox") || "0 0 512 512";
-        const node = cloneToMount(sym, safeId);
+    (state.byName[name] ||= new Set()).add(variety);
+    icons.push(name);
+    count++;
+  }
 
-        state.symbols[safeId] = {
-          safeId,
-          originalId,
-          variety,
-          name,
-          viewBox,
-          node,
-        };
-        (state.byName[name] ||= new Set()).add(variety);
-        icons.push(name);
-        count++;
-      }
-
-      batchIndex++;
-
-      if (end < symbols.length) {
-        // Schedule next batch asynchronously
-        requestAnimationFrame(processBatch);
-      } else {
-        // Done processing all symbols
-        icons.sort((a, b) => a.localeCompare(b));
-        state.varieties[variety].icons = icons;
-        state.varieties[variety].count = count;
-        resolve(count);
-      }
-    }
-
-    processBatch();
-  });
+  icons.sort((a, b) => a.localeCompare(b));
+  state.varieties[variety].icons = icons;
+  state.varieties[variety].count = count;
+  return count;
 }
 
 function extractIconName(originalId) {
@@ -245,11 +224,20 @@ function makeSafeId(variety, name) {
   return `sym--${slug(variety)}--${slug(name)}`;
 }
 
-function cloneToMount(sym, safeId) {
-  const clone = sym.cloneNode(true);
-  clone.setAttribute("id", safeId);
-  state.mount.appendChild(clone);
-  return clone;
+function serializeSymbolInner(symNode) {
+  const inner = [...symNode.childNodes]
+    .map((n) => {
+      if (n.nodeType === 1) return n.outerHTML;
+      if (n.nodeType === 3 && n.textContent.trim()) return n.textContent.trim();
+      return "";
+    })
+    .filter(Boolean)
+    .join("\n");
+  return inner
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .join("\n");
 }
 
 export const registry = {
@@ -327,7 +315,7 @@ export const registry = {
 
   cloneSymbol(variety, name) {
     const entry = registry.get(variety, name);
-    return entry ? entry.node.cloneNode(true) : null;
+    return entry ? entry.node?.cloneNode(true) : null;
   },
 
   svgString(variety, name, opts = {}) {
@@ -365,35 +353,18 @@ function buildInlineSvg(entry, opts = {}) {
     ? ` role="img" aria-label="${escapeAttr(ariaLabel)}"`
     : ' aria-hidden="true"';
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${entry.viewBox}"${dim}${clsAttr}${colorAttr}${strokeAttr}${roleAttr} ${attrs}><use href="#${entry.safeId}"/></svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${entry.viewBox}"${dim}${clsAttr}${colorAttr}${strokeAttr}${roleAttr} ${attrs}>${entry.innerHTML}</svg>`;
 }
 
 function buildExportSvg(entry, opts = {}) {
   const { color = "currentColor", stroke = null, size = 24 } = opts;
-  const inner = serializeSymbolInner(entry.node);
   const paintAttrs =
     stroke != null
       ? `fill="none" stroke="${color}" stroke-width="${stroke}" stroke-linecap="round" stroke-linejoin="round"`
       : `fill="${color}"`;
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${entry.viewBox}" width="${size}" height="${size}" ${paintAttrs}>
-${inner}
+${entry.innerHTML}
 </svg>`;
-}
-
-function serializeSymbolInner(symNode) {
-  const inner = [...symNode.childNodes]
-    .map((n) => {
-      if (n.nodeType === 1) return n.outerHTML;
-      if (n.nodeType === 3 && n.textContent.trim()) return n.textContent.trim();
-      return "";
-    })
-    .filter(Boolean)
-    .join("\n");
-  return inner
-    .split("\n")
-    .map((line) => "  " + line.trim())
-    .filter((l) => l.trim())
-    .join("\n");
 }
 
 function escapeAttr(s) {
