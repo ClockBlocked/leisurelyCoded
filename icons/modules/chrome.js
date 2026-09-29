@@ -1,26 +1,23 @@
-
-
-
-
-
 /* ============================================================
    ICON FORGE — js/chrome.js
    Renders and maintains the two sticky nav bars:
 
      • Top nav     → page-level routes (Home, Categories,
-                     Varieties, Bookmarks)
+                     Varieties, Bookmarks, Collections)
      • Style nav   → variety chips (Solid, Sharp, Duotone…)
 
-   Keeps the top-nav active state, the bookmark counter pill,
-   and the style-nav pressed state in sync with the store and
-   the router. Horizontally scrollable by default (see CSS).
+   Also wires:
+     • The bookmark counter pill (with pop animation)
+     • A ⌘K palette hint button in the top bar
+     • Active-state sync with the router
+     • Horizontal scroll-into-view for the active style chip
    ============================================================ */
 
 import { el, mount, log } from "./utils.js";
 import { data }   from "./data.js";
 import { store }  from "./store.js";
 import { router } from "./router.js";
-import { prettyVariety as _pv } from "./views/home.js";
+import { toggle as togglePalette } from "./palette.js";
 
 /* ============================================================
    DOM REFS
@@ -43,11 +40,12 @@ export const chrome = {
 
     renderTopNav();
     renderStyleNav();
-    syncBookmarkPill(0);
+    syncBookmarkPill(store.bookmark.all().length);
+    wirePaletteHint();
 
     // Store → chrome sync
     store.subscribe((s, patch) => {
-      if ("variety" in patch)  syncStyleNav(s.variety);
+      if ("variety" in patch) syncStyleNav(s.variety);
       if ("bookmarks" in patch) {
         syncBookmarkPill(s.bookmarks.length);
         bouncePill();
@@ -57,7 +55,7 @@ export const chrome = {
     // Router → top-nav sync
     router.onChange((route) => syncTopNav(route));
 
-    // Keep the style-nav scrolled so the active chip is visible.
+    // Ensure the active style chip is visible on first paint.
     queueMicrotask(() => scrollActiveIntoView("instant"));
   },
 };
@@ -66,10 +64,15 @@ export const chrome = {
    TOP NAV
    ============================================================ */
 const TOP_LINKS = [
-  { label: "Home",       path: "/",           match: ["home", "category", "variety", "search"] },
-  { label: "Categories", path: "/categories", match: ["categories"] },
-  { label: "Varieties",  path: "/varieties",  match: ["varieties"] },
-  { label: "Bookmarks",  path: "/bookmarks",  match: ["bookmarks"] },
+  {
+    label: "Home",
+    path: "/",
+    match: ["home", "category", "variety", "search", "collection"],
+  },
+  { label: "Categories",  path: "/categories",  match: ["categories"] },
+  { label: "Varieties",   path: "/varieties",   match: ["varieties"] },
+  { label: "Bookmarks",   path: "/bookmarks",   match: ["bookmarks"] },
+  { label: "Collections", path: "/collections", match: ["collections"] },
 ];
 
 function renderTopNav() {
@@ -105,11 +108,8 @@ function syncTopNav(route) {
   links.forEach((a) => {
     const matches = (a.dataset.match || "").split("|");
     const isActive = matches.includes(route.name);
-    if (isActive) {
-      a.setAttribute("aria-current", "page");
-    } else {
-      a.removeAttribute("aria-current");
-    }
+    if (isActive) a.setAttribute("aria-current", "page");
+    else a.removeAttribute("aria-current");
   });
 }
 
@@ -121,6 +121,7 @@ function renderStyleNav() {
 
   const varieties = data.varieties();
   const items = varieties.map((v) => {
+    const label = v.label || prettyVariety(v.key);
     const chip = el("button", {
       cls: "stylechip",
       type: "button",
@@ -128,37 +129,38 @@ function renderStyleNav() {
       attrs: {
         "aria-pressed": "false",
         title: v.available
-          ? `${v.count} icons in ${_pv(v.key)}`
-          : `${_pv(v.key)} — unavailable`,
+          ? `${v.count} icons in ${label}`
+          : `${label} — unavailable`,
         disabled: v.available ? null : true,
       },
       style: v.available ? null : { opacity: "0.4", cursor: "not-allowed" },
     },
       el("span", { cls: "stylechip__dot" }),
-      el("span", { text: _pv(v.key) }),
+      el("span", { text: label }),
       el("span", { cls: "stylechip__count", text: String(v.count) }),
     );
 
     chip.addEventListener("click", () => {
       if (!v.available) return;
       const current = store.variety.current();
+
       if (current === v.key) {
-        // Already active → still navigate to the variety page for
-        // a canonical URL, but as a fragment transition.
+        // Same chip — still navigate to the canonical URL if we
+        // aren't already there.
         const r = router.current();
         if (r?.name !== "variety" || r?.params?.key !== v.key) {
           router.go(`/varieties/${v.key}`);
         }
         return;
       }
+
       store.variety.set(v.key);
 
-      // If we're on a page that has a per-variety view, swap
-      // through the router; otherwise just refresh.
       const r = router.current();
       if (r?.name === "variety") {
         router.go(`/varieties/${v.key}`);
       } else {
+        // Fragment transition — spinner shows, view re-renders.
         router.refresh();
       }
     });
@@ -176,12 +178,8 @@ function syncStyleNav(activeVariety) {
   stylenavEl.querySelectorAll(".stylechip").forEach((chip) => {
     const on = chip.dataset.variety === activeVariety;
     chip.setAttribute("aria-pressed", String(on));
-    if (on) chip.classList.add("is-active");
-    else chip.classList.remove("is-active");
+    chip.classList.toggle("is-active", on);
   });
-
-  // Do not auto-scroll during initial route paint — only on user
-  // actions or explicit calls.
 }
 
 function scrollActiveIntoView(behavior = "smooth") {
@@ -208,10 +206,9 @@ function scrollActiveIntoView(behavior = "smooth") {
    BOOKMARK PILL
    ============================================================ */
 function syncBookmarkPill(count) {
-  if (!bookmarkPillEl) {
-    bookmarkPillEl = document.getElementById("bookmarkCount");
-  }
+  if (!bookmarkPillEl) bookmarkPillEl = document.getElementById("bookmarkCount");
   if (!bookmarkPillEl) return;
+
   bookmarkPillEl.textContent = String(count);
   bookmarkPillEl.style.display = count > 0 ? "" : "none";
 }
@@ -219,15 +216,56 @@ function syncBookmarkPill(count) {
 function bouncePill() {
   if (!bookmarkPillEl) return;
   bookmarkPillEl.classList.remove("is-pop");
-  // Force reflow so the animation restarts.
-  void bookmarkPillEl.offsetWidth;
+  void bookmarkPillEl.offsetWidth; // force reflow to restart animation
   bookmarkPillEl.classList.add("is-pop");
   setTimeout(() => bookmarkPillEl?.classList.remove("is-pop"), 520);
 }
 
 /* ============================================================
-   Expose for external triggers (e.g. after variety click in
-   home page code)
+   PALETTE HINT BUTTON
+   ------------------------------------------------------------
+   A small floating button in the top bar that opens ⌘K. Also
+   serves as a discovery affordance for keyboard-less users.
+   ============================================================ */
+function wirePaletteHint() {
+  const tools = document.querySelector(".topbar__tools");
+  if (!tools) return;
+  if (tools.querySelector(".palette-hint")) return; // idempotent
+
+  const btn = el("button", {
+    cls: "ghost-btn palette-hint",
+    type: "button",
+    attrs: { "aria-label": "Open command palette (⌘K)" },
+    on: { click: () => togglePalette() },
+  });
+  btn.innerHTML = `
+    <svg viewBox="0 0 24 24" width="15" height="15" fill="none"
+      stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+      stroke-linejoin="round" aria-hidden="true">
+      <circle cx="11" cy="11" r="7"/>
+      <path d="m20 20-3.6-3.6"/>
+    </svg>
+    <span style="display:inline-flex;align-items:center;gap:6px">
+      Search
+      <kbd>⌘K</kbd>
+    </span>
+  `;
+
+  // Insert before the theme button.
+  const themeBtn = tools.querySelector("#themeBtn");
+  if (themeBtn) tools.insertBefore(btn, themeBtn);
+  else tools.appendChild(btn);
+}
+
+/* ============================================================
+   UTIL
+   ============================================================ */
+function prettyVariety(key) {
+  return key.split("-").map((s) => s[0].toUpperCase() + s.slice(1)).join(" ");
+}
+
+/* ============================================================
+   Exposed for external triggers
    ============================================================ */
 export function scrollToActiveVariety() {
   scrollActiveIntoView("smooth");
