@@ -1,50 +1,24 @@
 /* ============================================================
-   ICON FORGE — js/sprite.js
+   modules/sprite.js
    Lazy-loading sprite registry.
-
-   Why lazy:
-     Pro+ sprite files are HUGE (60–70 MiB total, ~50k symbols).
-     Injecting them all at boot crashes the tab.
-
-   New model:
-     • loadManifest()  → discovers varieties (URLs + labels)
-     • loadVariety(k)  → fetches ONE sprite, injects its symbols
-     • loadSprites()   → manifest + the requested initial variety
-     • registry.ensure(k) → returns a promise for one variety
-
-   Public API mirrors the old one, plus:
-     registry.isLoaded(key)
-     registry.ensure(key)
-     registry.loadedVarieties()
    ============================================================ */
 
-import {
-  SPRITES,
-  VARIETY_META,
-  FALLBACK_SYMBOLS,
-} from "./config.js";
+import { SPRITES, VARIETY_META, FALLBACK_SYMBOLS } from "./config.js";
 import { log, slug } from "./utils.js";
 
 const PARSER = new DOMParser();
 
-/* ============================================================
-   STATE
-   ============================================================ */
 const state = {
-  manifestLoaded: false,
   mount: null,
-  varieties: Object.create(null),  // key → { url, label, blurb, available, loaded, loading, error, icons, count, primary }
-  symbols: Object.create(null),    // safeId → entry
-  byName: Object.create(null),     // name → Set<variety>
-  ensurePromises: Object.create(null), // key → Promise
+  manifestLoaded: false,
+  varieties: Object.create(null),
+  symbols: Object.create(null),
+  byName: Object.create(null),
+  ensurePromises: Object.create(null),
   totals: { icons: 0, loadedVarieties: 0 },
 };
 
-/* ============================================================
-   MANIFEST / DISCOVERY
-   ============================================================ */
 async function discover() {
-  // 1. Try the manifest
   try {
     const res = await fetch(SPRITES.manifestUrl, { cache: "no-store" });
     if (res.ok) {
@@ -58,11 +32,8 @@ async function discover() {
         }
       }
     }
-  } catch {
-    /* optional */
-  }
+  } catch {}
 
-  // 2. Fall back to probing the default candidates
   log.info("no manifest — probing default candidates");
   const base = SPRITES.defaultBase;
   const results = await Promise.all(
@@ -70,9 +41,7 @@ async function discover() {
       try {
         const res = await fetch(base + cand.file, { method: "HEAD" });
         if (!res.ok) return null;
-      } catch {
-        /* fall through — some servers block HEAD */
-      }
+      } catch {}
       return {
         key: cand.key,
         url: base + cand.file,
@@ -80,7 +49,7 @@ async function discover() {
         blurb: VARIETY_META[cand.key]?.blurb || "",
         primary: true,
       };
-    })
+    }),
   );
   return results.filter(Boolean);
 }
@@ -91,9 +60,7 @@ function normaliseManifest(manifest) {
     typeof manifest.base === "string" ? manifest.base : SPRITES.defaultBase;
   const list = Array.isArray(manifest.varieties) ? manifest.varieties : [];
   return list
-    .filter(
-      (v) => v && typeof v.key === "string" && typeof v.file === "string"
-    )
+    .filter((v) => v && typeof v.key === "string" && typeof v.file === "string")
     .map((v) => ({
       key: v.key,
       url: joinUrl(base, v.file),
@@ -110,9 +77,6 @@ function joinUrl(base, file) {
   return b + f;
 }
 
-/* ============================================================
-   PUBLIC
-   ============================================================ */
 export async function loadSprites({ initial = null, onProgress } = {}) {
   state.mount = document.getElementById("sprite-mount");
   if (!state.mount) {
@@ -124,7 +88,6 @@ export async function loadSprites({ initial = null, onProgress } = {}) {
     state.mount = m;
   }
 
-  // Discover once.
   const discovered = await discover();
   for (const v of discovered) {
     state.varieties[v.key] = {
@@ -132,7 +95,7 @@ export async function loadSprites({ initial = null, onProgress } = {}) {
       label: v.label,
       blurb: v.blurb,
       primary: v.primary !== false,
-      available: true,  // optimistic until proven otherwise
+      available: true,
       loaded: false,
       loading: false,
       error: null,
@@ -143,9 +106,11 @@ export async function loadSprites({ initial = null, onProgress } = {}) {
   state.manifestLoaded = true;
   onProgress?.(0, discovered.length, null, "discovered");
 
-  // Load the initial variety if requested.
   if (initial && state.varieties[initial]) {
     await ensure(initial);
+  } else if (discovered.length) {
+    // Load the first variety by default
+    await ensure(discovered[0].key);
   }
 
   return registry;
@@ -177,8 +142,9 @@ export async function ensure(key) {
     } finally {
       v.loading = false;
       delete state.ensurePromises[key];
-      state.totals.loadedVarieties =
-        Object.values(state.varieties).filter((x) => x.loaded).length;
+      state.totals.loadedVarieties = Object.values(state.varieties).filter(
+        (x) => x.loaded,
+      ).length;
       state.totals.icons = Object.keys(state.symbols).length;
     }
     return v;
@@ -187,14 +153,10 @@ export async function ensure(key) {
   return state.ensurePromises[key];
 }
 
-/* ============================================================
-   INGEST
-   ============================================================ */
 function ingestSprite(variety, svgText, url) {
   const doc = PARSER.parseFromString(svgText, "image/svg+xml");
-  if (doc.querySelector("parsererror")) {
+  if (doc.querySelector("parsererror"))
     throw new Error(`XML parse error in ${url}`);
-  }
 
   const symbols = doc.querySelectorAll("symbol");
   const icons = [];
@@ -235,9 +197,17 @@ function ingestSprite(variety, svgText, url) {
 function extractIconName(originalId) {
   const tokens = originalId.trim().split(/\s+/);
   const modifiers = new Set([
-    "fa-solid", "fa-regular", "fa-light", "fa-thin",
-    "fa-duotone", "fa-brands", "fa-sharp", "fa-sharp-solid",
-    "fa-sharp-regular", "fa-sharp-light", "fa-sharp-thin",
+    "fa-solid",
+    "fa-regular",
+    "fa-light",
+    "fa-thin",
+    "fa-duotone",
+    "fa-brands",
+    "fa-sharp",
+    "fa-sharp-solid",
+    "fa-sharp-regular",
+    "fa-sharp-light",
+    "fa-sharp-thin",
     "fa-fw",
   ]);
   for (let i = tokens.length - 1; i >= 0; i--) {
@@ -260,110 +230,26 @@ function cloneToMount(sym, safeId) {
   return clone;
 }
 
-/* ============================================================
-   FALLBACK (dev-only)
-   ============================================================ */
-export function injectFallbacks() {
-  const varieties = SPRITES.defaultCandidates.map((c) => c.key);
-  for (const variety of varieties) {
-    if (!state.varieties[variety]) {
-      state.varieties[variety] = {
-        url: "",
-        label: VARIETY_META[variety]?.label || variety,
-        blurb: VARIETY_META[variety]?.blurb || "",
-        primary: true,
-        available: true,
-        loaded: true,
-        loading: false,
-        error: null,
-        icons: [],
-        count: 0,
-      };
-    }
-
-    const icons = [];
-    for (const [name, d] of Object.entries(FALLBACK_SYMBOLS)) {
-      const safeId = makeSafeId(variety, name);
-      const symbol = document.createElementNS(
-        "http://www.w3.org/2000/svg",
-        "symbol"
-      );
-      symbol.setAttribute("id", safeId);
-      symbol.setAttribute("viewBox", "0 0 24 24");
-      const path = document.createElementNS(
-        "http://www.w3.org/2000/svg",
-        "path"
-      );
-      path.setAttribute("d", d);
-      const isFilled =
-        variety === "solid" ||
-        variety === "brands" ||
-        variety === "duotone" ||
-        variety.startsWith("sharp-solid");
-      if (isFilled) {
-        path.setAttribute("fill", "currentColor");
-      } else {
-        path.setAttribute("fill", "none");
-        path.setAttribute("stroke", "currentColor");
-        path.setAttribute("stroke-width", "1.75");
-        path.setAttribute("stroke-linecap", "round");
-        path.setAttribute("stroke-linejoin", "round");
-      }
-      symbol.appendChild(path);
-      state.mount.appendChild(symbol);
-
-      state.symbols[safeId] = {
-        safeId,
-        originalId: `fa-${variety} fa-${name}`,
-        variety,
-        name,
-        viewBox: "0 0 24 24",
-        node: symbol,
-      };
-      (state.byName[name] ||= new Set()).add(variety);
-      icons.push(name);
-    }
-
-    icons.sort((a, b) => a.localeCompare(b));
-    state.varieties[variety].icons = icons;
-    state.varieties[variety].count = icons.length;
-    state.varieties[variety].available = true;
-  }
-  state.totals.loadedVarieties =
-    Object.values(state.varieties).filter((x) => x.loaded).length;
-  state.totals.icons = Object.keys(state.symbols).length;
-}
-
-/* ============================================================
-   REGISTRY
-   ============================================================ */
 export const registry = {
   isReady() {
     return state.manifestLoaded;
   },
-
   ready() {
     return Promise.resolve(registry);
   },
-
-  /* --- loading --- */
   ensure(key) {
     return ensure(key);
   },
-
   isLoaded(key) {
     return !!state.varieties[key]?.loaded;
   },
-
+  isLoading(key) {
+    return !!state.varieties[key]?.loading;
+  },
   isVarietyAvailable(variety) {
     return !!state.varieties[variety]?.available;
   },
 
-  isLoading(key) {
-    return !!state.varieties[key]?.loading;
-  },
-
-  /* --- meta --- */
   getVarieties() {
     return Object.entries(state.varieties).map(([key, v]) => ({
       key,
@@ -381,11 +267,10 @@ export const registry = {
 
   loadedVarieties() {
     return Object.keys(state.varieties).filter(
-      (k) => state.varieties[k].loaded
+      (k) => state.varieties[k].loaded,
     );
   },
 
-  /* --- reads --- */
   listIcons(variety) {
     return state.varieties[variety]?.icons ?? [];
   },
@@ -410,35 +295,33 @@ export const registry = {
     return state.symbols[makeSafeId(variety, name)] || null;
   },
 
+  hasAnywhere(name) {
+    return state.byName[name] && state.byName[name].size > 0;
+  },
+
   varietiesFor(name) {
     return [...(state.byName[name] || [])];
   },
 
   cloneSymbol(variety, name) {
     const entry = registry.get(variety, name);
-    if (!entry) return null;
-    return entry.node.cloneNode(true);
+    return entry ? entry.node.cloneNode(true) : null;
   },
 
   svgString(variety, name, opts = {}) {
     const entry = registry.get(variety, name);
-    if (!entry) return "";
-    return buildInlineSvg(entry, opts);
+    return entry ? buildInlineSvg(entry, opts) : "";
   },
 
   exportString(variety, name, opts = {}) {
     const entry = registry.get(variety, name);
-    if (!entry) return "";
-    return buildExportSvg(entry, opts);
+    return entry ? buildExportSvg(entry, opts) : "";
   },
 
   _symbols: state.symbols,
   _varieties: state.varieties,
 };
 
-/* ============================================================
-   RENDER BUILDERS
-   ============================================================ */
 function buildInlineSvg(entry, opts = {}) {
   const {
     size = null,
