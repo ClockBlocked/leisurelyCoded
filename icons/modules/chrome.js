@@ -208,7 +208,9 @@ function pickInlineVarieties(varieties) {
 
 function makeStyleChip(v) {
   const label = v.label || prettyVariety(v.key);
-  const chip = el("button", {
+  const isDisabled = !v.available && v.loaded;
+
+  const opts = {
     cls: "stylechip",
     type: "button",
     dataset: { variety: v.key },
@@ -217,13 +219,16 @@ function makeStyleChip(v) {
       title: v.available
         ? `${v.count || "…"} icons in ${label}`
         : `${label} — unavailable`,
-      disabled: !v.available && v.loaded ? true : null,
+      disabled: isDisabled ? true : null,
     },
-    style:
-      !v.available && v.loaded
-        ? { opacity: "0.4", cursor: "not-allowed" }
-        : null,
-  },
+  };
+
+  // Only attach a style override when we actually need one.
+  if (isDisabled) {
+    opts.style = { opacity: "0.4", cursor: "not-allowed" };
+  }
+
+  const chip = el("button", opts,
     el("span", { cls: "stylechip__dot" }),
     el("span", { text: label }),
     el("span", {
