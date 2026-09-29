@@ -20,8 +20,8 @@ export const TIMING = {
 };
 
 export const SPRITES = {
-  manifestUrl: "./sprite-manifest.json",
-  defaultBase: "../fontawesome/sprites/",
+  manifestUrl: "https://clockblocked.github.io/leisurelyCoded/icons/sprite-manifest.json",
+  defaultBase: "https://clockblocked.github.io/leisurelyCoded/icons/fontawesome/sprites/",
   defaultCandidates: [
     { key: "solid",                 file: "solid.svg",                 label: "Solid" },
 /**    { key: "regular",               file: "regular.svg",               label: "Regular" },
