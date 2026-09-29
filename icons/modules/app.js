@@ -146,9 +146,13 @@ async function boot() {
    ============================================================ */
 async function renderRoute(route) {
   const container = document.getElementById("view");
-  if (!container) {
-    log.error("#view element missing");
-    return;
+  if (!container) return;
+
+  // Ensure the current variety is loaded before rendering.
+  const currentVariety = store.variety.current();
+  if (currentVariety && !registry.isLoaded(currentVariety)) {
+    await registry.ensure(currentVariety);
+    invalidate(); // tell data.js to refresh its caches
   }
 
   const view = VIEWS[route.name] || HomeView;
