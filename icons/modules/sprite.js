@@ -129,7 +129,7 @@ export async function ensure(key) {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const text = await res.text();
       if (!/<svg[\s>]/i.test(text)) throw new Error("not an SVG sprite");
-      ingestSprite(key, text, v.url);
+      await ingestSprite(key, text, v.url);  // ← Await it now
       v.loaded = true;
       v.available = v.count > 0;
       v.error = v.count > 0 ? null : "no symbols";
@@ -162,36 +162,58 @@ function ingestSprite(variety, svgText, url) {
   const icons = [];
   let count = 0;
 
-  for (const sym of symbols) {
-    const originalId = sym.getAttribute("id") || "";
-    if (!originalId) continue;
+  // Process symbols in batches to avoid blocking the main thread
+  const BATCH_SIZE = 100;
+  let batchIndex = 0;
 
-    const name = extractIconName(originalId);
-    if (!name) continue;
+  return new Promise((resolve) => {
+    function processBatch() {
+      const start = batchIndex * BATCH_SIZE;
+      const end = Math.min(start + BATCH_SIZE, symbols.length);
 
-    const safeId = makeSafeId(variety, name);
-    if (state.symbols[safeId]) continue;
+      for (let i = start; i < end; i++) {
+        const sym = symbols[i];
+        const originalId = sym.getAttribute("id") || "";
+        if (!originalId) continue;
 
-    const viewBox = sym.getAttribute("viewBox") || "0 0 512 512";
-    const node = cloneToMount(sym, safeId);
+        const name = extractIconName(originalId);
+        if (!name) continue;
 
-    state.symbols[safeId] = {
-      safeId,
-      originalId,
-      variety,
-      name,
-      viewBox,
-      node,
-    };
-    (state.byName[name] ||= new Set()).add(variety);
-    icons.push(name);
-    count++;
-  }
+        const safeId = makeSafeId(variety, name);
+        if (state.symbols[safeId]) continue;
 
-  icons.sort((a, b) => a.localeCompare(b));
-  state.varieties[variety].icons = icons;
-  state.varieties[variety].count = count;
-  return count;
+        const viewBox = sym.getAttribute("viewBox") || "0 0 512 512";
+        const node = cloneToMount(sym, safeId);
+
+        state.symbols[safeId] = {
+          safeId,
+          originalId,
+          variety,
+          name,
+          viewBox,
+          node,
+        };
+        (state.byName[name] ||= new Set()).add(variety);
+        icons.push(name);
+        count++;
+      }
+
+      batchIndex++;
+
+      if (end < symbols.length) {
+        // Schedule next batch asynchronously
+        requestAnimationFrame(processBatch);
+      } else {
+        // Done processing all symbols
+        icons.sort((a, b) => a.localeCompare(b));
+        state.varieties[variety].icons = icons;
+        state.varieties[variety].count = count;
+        resolve(count);
+      }
+    }
+
+    processBatch();
+  });
 }
 
 function extractIconName(originalId) {
