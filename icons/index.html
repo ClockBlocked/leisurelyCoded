@@ -4,11 +4,16 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Icon Forge — Font Awesome Library</title>
-  <meta name="description" content="A smooth, searchable Font Awesome icon library." />
+  <meta name="description" content="A fast, searchable Font Awesome icon library. Browse by category or variety, export icons as SVG, JSX or Data URI." />
+  <meta name="color-scheme" content="dark light" />
+  <meta name="theme-color" content="#0a0b10" media="(prefers-color-scheme: dark)" />
+  <meta name="theme-color" content="#f2f3f7" media="(prefers-color-scheme: light)" />
   <link rel="stylesheet" href="./ui/style.css" />
 </head>
 
 <body>
+  <a href="#view" class="skip-link">Skip to content</a>
+
   <!-- ══ Full-page loading bar ══════════════════════════════ -->
   <div class="progress" id="progress" aria-hidden="true">
     <div class="progress__bar" id="progressBar"></div>
@@ -21,7 +26,7 @@
   <!-- ══ Chrome: top bar + style bar ════════════════════════ -->
   <header class="chrome">
     <div class="topbar">
-      <a class="brand" href="#/">
+      <a class="brand" href="#/" aria-label="Icon Forge — Home">
         <span class="brand__mark" aria-hidden="true">✦</span>
         <span class="brand__text">Icon&nbsp;<em>Forge</em></span>
       </a>
@@ -57,7 +62,7 @@
 
   <!-- ══ View + spinner overlay ═════════════════════════════ -->
   <div class="view-wrap">
-    <main id="view" class="view" role="main"></main>
+    <main id="view" class="view" role="main" tabindex="-1"></main>
 
     <div class="spinner-overlay" id="spinner" hidden>
       <div class="loader" role="status" aria-live="polite">
@@ -138,12 +143,14 @@
     <span id="toastMsg">Copied</span>
   </div>
 
+  <noscript>
+    <div style="padding:40px;text-align:center;font-family:system-ui">
+      <h1>Icon Forge needs JavaScript</h1>
+      <p>Please enable JavaScript to use the library.</p>
+    </div>
+  </noscript>
+
   <!-- ══ App entry point ═══════════════════════════════════ -->
-  <script type="module" src="./modules/app.js?v=1.2.0"></script>
-
-
-<script src="https://cdn.jsdelivr.net/npm/eruda"></script>
-<script>eruda.init();</script>
-
+  <script type="module" src="./modules/app.js"></script>
 </body>
 </html>
