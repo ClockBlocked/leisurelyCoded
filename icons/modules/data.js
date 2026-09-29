@@ -13,7 +13,6 @@ import { CATEGORIES } from "./config.js";
 import { registry } from "./sprite.js";
 import { log, unique } from "./utils.js";
 import { categorize as rawCategorize } from "./taxonomy.js";
-import { buildIndex, invalidate, data } from "./data.js";
 
 /* ============================================================
    STATE
