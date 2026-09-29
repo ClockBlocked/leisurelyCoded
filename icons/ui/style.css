@@ -2809,3 +2809,24 @@ kbd {
   color: var(--text-faint);
   font-variant-numeric: tabular-nums;
 }
+
+
+
+
+
+.stylechip.is-loading {
+  opacity: 0.55;
+  pointer-events: none;
+}
+.stylechip.is-loading::after {
+  content: "";
+  position: absolute;
+  right: 8px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  animation: spin 0.7s linear infinite;
+}
+.stylechip { position: relative; }
