@@ -1,110 +1,142 @@
-
-
-
-
-
 /* ============================================================
    ICON FORGE — js/app.js
-   Boot orchestrator. This is the only file index.html needs
-   to include (as type="module").
+   Boot orchestrator. The only module index.html includes.
 
-   Responsibilities:
-     1. Initialize DOM-only modules (progress, spinner, toast,
-        theme, chrome, search, stage).
-     2. Load every sprite file.
-     3. Build the icon index from the loaded registry.
-     4. Register route handlers for every page.
-     5. Kick the router.
+   Boot order:
+     1.  DOM-only modules (progress, spinner, toast, theme,
+         stage, palette, service worker register)
+     2.  Load every sprite file (auto-discovery or manifest)
+     3.  Build the icon index from the loaded registry
+     4.  Chrome (navbars) + global search — now that data exists
+     5.  Router init + first route render
+     6.  Tidy up the boot UX
 
-   Failure modes:
-     • If sprites can't be fetched, the sprite module installs
-       fallback symbols so the UI still renders.
-     • If a route handler throws, the router logs and continues.
+   Failures:
+     • Sprite files → sprite.js installs fallbacks so the UI
+       renders meaningfully.
+     • A route handler throwing → the router logs and paints an
+       error card.
+     • Service worker → silently skipped on localhost and file://.
    ============================================================ */
 
-import { log }        from "./utils.js";
+import { APP, UI, TIMING } from "./config.js";
+import { log, storage }    from "./utils.js";
+
 import { progress }   from "./progress.js";
 import { spinner }    from "./spinner.js";
 import { toast }      from "./toast.js";
 import { theme }      from "./theme.js";
-import { chrome }     from "./chrome.js";
-import { search }     from "./search.js";
-import { stage }      from "./stage.js";
 import { loadSprites, registry } from "./sprite.js";
 import { buildIndex, data }      from "./data.js";
 import { store }      from "./store.js";
+import { collections } from "./collections.js";
 import { router }     from "./router.js";
+import { chrome }     from "./chrome.js";
+import { search }     from "./search.js";
+
+/* Stage — the module exposes `stage` as a namespace object
+   (see the patch note at the bottom of this file if you haven't
+   applied it yet). */
+import { stage }      from "./stage.js";
+
+/* Palette — namespace-style named exports. */
+import * as palette   from "./palette.js";
+
+/* Service worker */
+import { swRegister, clearCaches, unregisterSW } from "./sw-register.js";
 
 /* ------------------------------------------------------------
-   View modules
+   Views
    ------------------------------------------------------------ */
-import * as HomeView       from "./views/home.js";
-import * as CategoriesView from "./views/categories.js";
-import * as CategoryView   from "./views/category.js";
-import * as VarietiesView  from "./views/varieties.js";
-import * as VarietyView    from "./views/variety.js";
-import * as BookmarksView  from "./views/bookmarks.js";
-import * as SearchView     from "./views/search.js";
+import * as HomeView        from "./views/home.js";
+import * as CategoriesView  from "./views/categories.js";
+import * as CategoryView    from "./views/category.js";
+import * as VarietiesView   from "./views/varieties.js";
+import * as VarietyView     from "./views/variety.js";
+import * as BookmarksView   from "./views/bookmarks.js";
+import * as CollectionsView from "./views/collections.js";
+import * as CollectionView  from "./views/collection.js";
+import * as SearchView      from "./views/search.js";
+
+/* ============================================================
+   ROUTE → VIEW MAP
+   ============================================================ */
+const VIEWS = {
+  home:        HomeView,
+  categories:  CategoriesView,
+  category:    CategoryView,
+  varieties:   VarietiesView,
+  variety:     VarietyView,
+  bookmarks:   BookmarksView,
+  collections: CollectionsView,
+  collection:  CollectionView,
+  search:      SearchView,
+};
 
 /* ============================================================
    BOOT
    ============================================================ */
 async function boot() {
-  // ---- 1. DOM modules first so the loading UI is wired before
-  //         any network activity.
+  /* ---------- 1. DOM-only modules ---------- */
   progress.init();
   spinner.init();
   toast.init();
   theme.init();
+
+  // Stage and palette both build their own UI, but rely on the
+  // DOM nodes from index.html and the sprite registry existing
+  // by the time they're first used. Safe to init now.
   stage.init();
+  palette.init();
 
-  // Show the top bar immediately so the app feels alive.
+  // Service worker registration is deferred (see sw-register.js).
+  swRegister.init();
+
+  /* ---------- 2. Show the top progress bar immediately ---------- */
   progress.start();
-  progress.set(0.08);
+  progress.set(0.06);
 
-  // ---- 2. Load every sprite file
+  /* ---------- 3. Load sprites ---------- */
   await loadSprites((done, total) => {
-    const fraction = 0.08 + (done / Math.max(total, 1)) * 0.72;
+    const fraction = 0.06 + (done / Math.max(total, 1)) * 0.74;
     progress.set(fraction);
   });
 
-  progress.set(0.9);
+  progress.set(0.88);
 
-  // ---- 3. Build the icon index from the registry
+  /* ---------- 4. Build the icon index ---------- */
   buildIndex();
 
-  // ---- 4. Now that data exists, mount the nav bars so they
-  //         reflect real counts.
+  /* ---------- 5. Sanity check the persisted variety ---------- */
+  const allVarieties = data.varieties();
+  const available    = allVarieties.filter((v) => v.available);
+  const current      = store.variety.current();
+  const currentValid = available.some((v) => v.key === current);
+  if (!currentValid && available.length) {
+    store.variety.set(available[0].key);
+  }
+
+  /* ---------- 6. Chrome + search ---------- */
   chrome.init();
   search.init();
 
-  // ---- 5. Register routes and let the router paint the first
-  //         view.
+  /* ---------- 7. Router init and first render ---------- */
   router.init({
-    render: renderRoute,
-    onChange: (route, meta) => {
-      // Update <title> and a data attribute for CSS hooks.
-      updateDocumentTitle(route);
-    },
+    render:   renderRoute,
+    onChange: (route) => updateDocumentTitle(route),
   });
 
-  // ---- 6. Tidy boot
+  /* ---------- 8. Tidy the boot UX ---------- */
   await progress.finish();
 
-  // Reflect initial variety in the URL if we landed on home
-  // without one (this keeps deep links clean).
-  const current = router.current();
-  if (current?.name === "home" && !location.hash) {
-    // no-op — the store already holds the persisted variety
-  }
-
-  log.info("Icon Forge ready");
+  log.info(
+    `${APP.name} v${APP.version} ready — ` +
+    `${registry.total()} icons · ${available.length} varieties`
+  );
 }
 
 /* ============================================================
    ROUTE DISPATCH
-   ------------------------------------------------------------
-   Every route handler is `(container, route) => Promise<void>`.
    ============================================================ */
 async function renderRoute(route) {
   const container = document.getElementById("view");
@@ -113,15 +145,7 @@ async function renderRoute(route) {
     return;
   }
 
-  const view = {
-    home:       HomeView,
-    categories: CategoriesView,
-    category:   CategoryView,
-    varieties:  VarietiesView,
-    variety:    VarietyView,
-    bookmarks:  BookmarksView,
-    search:     SearchView,
-  }[route.name] || HomeView;
+  const view = VIEWS[route.name] || HomeView;
 
   try {
     await view.render(container, route);
@@ -130,10 +154,14 @@ async function renderRoute(route) {
     renderFallback(container, err);
   }
 
-  // Restore focus to the top of the page after full navigations
-  // (feels abrupt otherwise, especially on mobile).
+  // Full navigations scroll to the top of the page. Fragment
+  // transitions leave the user where they were.
   if (route.level === "full") {
-    window.scrollTo({ top: 0, behavior: "instant" in window ? "instant" : "auto" });
+    try {
+      window.scrollTo({ top: 0, behavior: "instant" });
+    } catch {
+      window.scrollTo(0, 0);
+    }
   }
 }
 
@@ -141,6 +169,7 @@ async function renderRoute(route) {
    FALLBACK ERROR VIEW
    ============================================================ */
 function renderFallback(container, err) {
+  const safeMessage = escapeHtml(err?.message || "Unknown error");
   container.replaceChildren(
     Object.assign(document.createElement("div"), {
       className: "empty",
@@ -152,7 +181,10 @@ function renderFallback(container, err) {
             <circle cx="12" cy="12" r="9"/></svg>
         </span>
         <h3 class="empty__title">Something went sideways</h3>
-        <p class="empty__text">${escapeHtml(err?.message || "Unknown error")}</p>
+        <p class="empty__text">${safeMessage}</p>
+        <button class="empty__cta" type="button" onclick="location.hash='#/'">
+          Back to Home
+        </button>
       `,
     })
   );
@@ -169,15 +201,17 @@ function escapeHtml(s) {
    DOCUMENT TITLE
    ============================================================ */
 function updateDocumentTitle(route) {
-  const base = "Icon Forge";
+  const base = APP.name;
   const map = {
-    home:       null,
-    categories: "Categories",
-    category:   route.params?.key ? prettyKey(route.params.key) : "Category",
-    varieties:  "Varieties",
-    variety:    route.params?.key ? prettyKey(route.params.key) : "Variety",
-    bookmarks:  "Bookmarks",
-    search:     route.query?.q ? `“${route.query.q}”` : "Search",
+    home:        null,
+    categories:  "Categories",
+    category:    route.params?.key ? prettyKey(route.params.key) : "Category",
+    varieties:   "Varieties",
+    variety:     route.params?.key ? prettyKey(route.params.key) : "Variety",
+    bookmarks:   "Bookmarks",
+    collections: "Collections",
+    collection:  "Collection",
+    search:      route.query?.q ? `“${route.query.q}”` : "Search",
   };
   const extra = map[route.name];
   document.title = extra ? `${extra} · ${base}` : base;
@@ -191,24 +225,49 @@ function prettyKey(key) {
 }
 
 /* ============================================================
-   BOOT WHEN READY
-   ============================================================ */
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", boot, { once: true });
-} else {
-  // Already parsed (module scripts are deferred by nature, so
-  // this path is the usual one).
-  boot();
-}
-
-/* ============================================================
-   Expose a tiny debug surface (safe to leave in production).
+   DEBUG SURFACE
    ============================================================ */
 window.__forge = {
+  version: APP.version,
+
+  // core
   store,
   router,
   registry,
   data,
+  collections,
+
+  // loading UX (useful when tuning TIMING.*)
   progress,
   spinner,
+
+  // palette control
+  palette: {
+    open: palette.openPalette,
+    close: palette.close,
+    toggle: palette.toggle,
+    isOpen: palette.isOpen,
+  },
+
+  // service worker controls
+  sw: {
+    clearCaches,
+    unregister: unregisterSW,
+  },
+
+  // shorthands for the console
+  async reset() {
+    store.reset();
+    localStorage.clear();
+    log.info("state + storage reset — reload to boot clean");
+  },
 };
+
+/* ============================================================
+   KICK OFF
+   ============================================================ */
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", boot, { once: true });
+} else {
+  boot();
+}
