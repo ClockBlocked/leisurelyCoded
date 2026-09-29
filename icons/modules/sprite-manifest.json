@@ -1,16 +1,50 @@
 {
-  "$comment": "Icon Forge sprite manifest. Rename to sprite-manifest.json to activate. Delete or rename to fall back to auto-discovery.",
+  "$comment": "Icon Forge sprite manifest. Edit labels/blurbs freely. Delete this file to fall back to auto-discovery.",
   "base": "./fontawesome/sprites/",
   "varieties": [
-    { "key": "solid",         "file": "solid.svg",         "label": "Solid",         "blurb": "Bold, filled shapes with maximum punch." },
-    { "key": "regular",       "file": "regular.svg",       "label": "Regular",       "blurb": "Refined line icons with a lighter touch." },
-    { "key": "light",         "file": "light.svg",         "label": "Light",         "blurb": "Airy hairlines that whisper." },
-    { "key": "thin",          "file": "thin.svg",          "label": "Thin",          "blurb": "Featherweight strokes for editorial." },
-    { "key": "duotone",       "file": "duotone.svg",       "label": "Duotone",       "blurb": "Two-tone depth for icons that pop." },
-    { "key": "brands",        "file": "brands.svg",        "label": "Brands",        "blurb": "Logos for social and integrations." },
-    { "key": "sharp-solid",   "file": "sharp-solid.svg",   "label": "Sharp Solid",   "blurb": "Crisp corners for UI chrome." },
-    { "key": "sharp-regular", "file": "sharp-regular.svg", "label": "Sharp Regular", "blurb": "Sharp outlines for tight grids." },
-    { "key": "sharp-light",   "file": "sharp-light.svg",   "label": "Sharp Light",   "blurb": "Sharp and light — precision hairlines." },
-    { "key": "sharp-thin",    "file": "sharp-thin.svg",    "label": "Sharp Thin",    "blurb": "The lightest sharp variant." }
+
+    { "key": "solid",         "file": "solid.svg",         "label": "Solid",         "blurb": "Bold, filled shapes with maximum punch. The workhorse of the set.", "primary": true },
+    { "key": "regular",       "file": "regular.svg",       "label": "Regular",       "blurb": "Refined line icons with a lighter, airier feel.", "primary": true },
+    { "key": "light",         "file": "light.svg",         "label": "Light",         "blurb": "Airy hairlines that whisper rather than shout.", "primary": true },
+    { "key": "thin",          "file": "thin.svg",          "label": "Thin",          "blurb": "Featherweight strokes for elegant editorial layouts.", "primary": true },
+    { "key": "duotone",       "file": "duotone.svg",       "label": "Duotone",       "blurb": "Two-tone depth for icons that pop off the page.", "primary": true },
+    { "key": "brands",        "file": "brands.svg",        "label": "Brands",        "blurb": "Every logo you'll ever need — social, platforms, integrations.", "primary": true },
+
+    { "key": "sharp-solid",   "file": "sharp-solid.svg",   "label": "Sharp Solid",   "blurb": "Crisp corners and precise angles, engineered for UI chrome.", "primary": true },
+    { "key": "sharp-regular", "file": "sharp-regular.svg", "label": "Sharp Regular", "blurb": "Sharp outlines with the weight of a Regular, for tight grids.", "primary": true },
+    { "key": "sharp-light",   "file": "sharp-light.svg",   "label": "Sharp Light",   "blurb": "Sharp and light — precision drawn in a single hairline." },
+    { "key": "sharp-thin",    "file": "sharp-thin.svg",    "label": "Sharp Thin",    "blurb": "The lightest sharp variant. Architectural and precise." },
+    { "key": "sharp-duotone-solid",   "file": "sharp-duotone-solid.svg",   "label": "Sharp Duotone Solid",   "blurb": "Sharp geometry with two-tone fill depth." },
+    { "key": "sharp-duotone-regular", "file": "sharp-duotone-regular.svg", "label": "Sharp Duotone Regular", "blurb": "Sharp outline with a softer duotone fill." },
+    { "key": "sharp-duotone-light",   "file": "sharp-duotone-light.svg",   "label": "Sharp Duotone Light",   "blurb": "Feather-light sharp duo for dense chrome." },
+    { "key": "sharp-duotone-thin",    "file": "sharp-duotone-thin.svg",    "label": "Sharp Duotone Thin",    "blurb": "The lightest sharp duotone — whisper-quiet." },
+
+    { "key": "duotone-regular", "file": "duotone-regular.svg", "label": "Duotone Regular", "blurb": "Soft duotone with a Regular-weight line." },
+    { "key": "duotone-light",   "file": "duotone-light.svg",   "label": "Duotone Light",   "blurb": "Airy duotone for subtle emphasis." },
+    { "key": "duotone-thin",    "file": "duotone-thin.svg",    "label": "Duotone Thin",    "blurb": "The lightest duotone pass." },
+
+    { "key": "slab-regular",          "file": "slab-regular.svg",          "label": "Slab Regular",     "blurb": "Chunky editorial strokes with a typographic soul." },
+    { "key": "slab-press-regular",    "file": "slab-press-regular.svg",    "label": "Slab Press",       "blurb": "Slab with a printing-press texture." },
+    { "key": "slab-duo-regular",      "file": "slab-duo-regular.svg",      "label": "Slab Duo",         "blurb": "Slab weight with two-tone depth." },
+    { "key": "slab-press-duo-regular","file": "slab-press-duo-regular.svg","label": "Slab Press Duo",   "blurb": "Slab press with duotone fill." },
+
+    { "key": "jelly-regular",       "file": "jelly-regular.svg",       "label": "Jelly Regular",  "blurb": "Squishy, rounded, and playful." },
+    { "key": "jelly-fill-regular",  "file": "jelly-fill-regular.svg",  "label": "Jelly Fill",     "blurb": "Jelly outlines with filled interiors." },
+    { "key": "jelly-duo-regular",   "file": "jelly-duo-regular.svg",   "label": "Jelly Duo",      "blurb": "Jelly with two-tone fill." },
+
+    { "key": "utility-semibold",       "file": "utility-semibold.svg",       "label": "Utility",        "blurb": "Functional, UI-focused strokes drawn semibold." },
+    { "key": "utility-fill-semibold",  "file": "utility-fill-semibold.svg",  "label": "Utility Fill",   "blurb": "Utility outlines with filled interiors." },
+    { "key": "utility-duo-semibold",   "file": "utility-duo-semibold.svg",   "label": "Utility Duo",    "blurb": "Utility weight with two-tone depth." },
+
+    { "key": "whiteboard-semibold", "file": "whiteboard-semibold.svg", "label": "Whiteboard", "blurb": "Marker-pen energy — hand-drawn and loose." },
+    { "key": "thumbprint-light",    "file": "thumbprint-light.svg",    "label": "Thumbprint", "blurb": "Warm, slightly irregular, human touch." },
+    { "key": "notdog-solid",        "file": "notdog-solid.svg",        "label": "Notdog Solid",  "blurb": "Playful, irregular hand-drawn character." },
+    { "key": "notdog-duo-solid",    "file": "notdog-duo-solid.svg",    "label": "Notdog Duo",    "blurb": "Notdog with a two-tone overlay." },
+    { "key": "vellum-solid",        "file": "vellum-solid.svg",        "label": "Vellum",        "blurb": "Luxurious, high-end transparency feel." },
+    { "key": "mosaic-solid",        "file": "mosaic-solid.svg",        "label": "Mosaic",        "blurb": "Geometric tiles assembled into glyphs." },
+    { "key": "pixel-regular",       "file": "pixel-regular.svg",       "label": "Pixel",         "blurb": "Retro 8-bit/16-bit nostalgia." },
+    { "key": "graphite-thin",       "file": "graphite-thin.svg",       "label": "Graphite",      "blurb": "Pencil-sketch texture with a soft edge." },
+    { "key": "etch-solid",          "file": "etch-solid.svg",          "label": "Etch",          "blurb": "Engraved, carved-in-stone aesthetic." },
+    { "key": "chiseled-regular",    "file": "chiseled-regular.svg",    "label": "Chiseled",      "blurb": "Angular, sculpted facets with sharp edges." }
   ]
 }
