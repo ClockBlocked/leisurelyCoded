@@ -28,8 +28,8 @@ function shouldRegister() {
 
 async function register() {
   try {
-    registration = await navigator.serviceWorker.register("../sw.js", {
-      scope: "../",
+    registration = await navigator.serviceWorker.register("https://clockblocked.github.io/leisurelyCoded/icons/sw.js", {
+      scope: "https://clockblocked.github.io/leisurelyCoded/icons/",
       updateViaCache: "none",
     });
     log.info("service worker registered:", registration.scope);
