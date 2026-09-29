@@ -1,21 +1,5 @@
 /* ============================================================
-   ICON FORGE — js/collections.js
-   Named groups of icons. Full CRUD + persistence + import/export.
-
-   A collection looks like:
-     {
-       id:          "c_lk3n9x_1",
-       name:        "Landing page",
-       description: "",
-       createdAt:   1727100000000,
-       updatedAt:   1727100400000,
-       items: [
-         { variety: "solid", name: "arrow-right", addedAt: 1727100400000 },
-         ...
-       ]
-     }
-
-   IDs are stable and unique-per-session, generated client-side.
+   modules/collections.js
    ============================================================ */
 
 import { store } from "./store.js";
@@ -25,20 +9,14 @@ const MAX_NAME = 60;
 const MAX_DESC = 240;
 const MAX_ITEMS = 500;
 
-/* ============================================================
-   PUBLIC
-   ============================================================ */
 export const collections = {
-  /* ---- read ---- */
   all() {
     return store.get().collections.map(clone);
   },
-
   get(id) {
     const c = find(id);
     return c ? clone(c) : null;
   },
-
   count(id) {
     const c = find(id);
     return c ? c.items.length : 0;
@@ -46,25 +24,23 @@ export const collections = {
 
   has(id, variety, name) {
     const c = find(id);
-    if (!c) return false;
-    return c.items.some((i) => i.variety === variety && i.name === name);
+    return c
+      ? c.items.some((i) => i.variety === variety && i.name === name)
+      : false;
   },
 
-  /** Every collection that contains a given icon. */
   containing(variety, name) {
     return store
       .get()
       .collections.filter((c) =>
-        c.items.some((i) => i.variety === variety && i.name === name)
+        c.items.some((i) => i.variety === variety && i.name === name),
       )
       .map(clone);
   },
 
-  /* ---- create / update / delete ---- */
   create(name, description = "") {
     const cleanName = sanitizeName(name);
     if (!cleanName) return null;
-
     const collection = {
       id: genId(),
       name: cleanName,
@@ -73,7 +49,6 @@ export const collections = {
       updatedAt: Date.now(),
       items: [],
     };
-
     const next = [collection, ...store.get().collections];
     store.set({ collections: next }, { persist: true });
     return clone(collection);
@@ -82,7 +57,11 @@ export const collections = {
   rename(id, name) {
     const cleanName = sanitizeName(name);
     if (!cleanName) return false;
-    return mutate(id, (c) => ({ ...c, name: cleanName, updatedAt: Date.now() }));
+    return mutate(id, (c) => ({
+      ...c,
+      name: cleanName,
+      updatedAt: Date.now(),
+    }));
   },
 
   describe(id, description) {
@@ -111,7 +90,6 @@ export const collections = {
   duplicate(id) {
     const src = find(id);
     if (!src) return null;
-
     const copy = {
       id: genId(),
       name: uniqueName(`${src.name} (copy)`),
@@ -120,20 +98,17 @@ export const collections = {
       updatedAt: Date.now(),
       items: src.items.map((i) => ({ ...i })),
     };
-
     const next = [copy, ...store.get().collections];
     store.set({ collections: next }, { persist: true });
     return clone(copy);
   },
 
-  /* ---- items ---- */
   add(id, variety, name) {
     const src = find(id);
     if (!src) return false;
     if (src.items.length >= MAX_ITEMS) return false;
-    if (src.items.some((i) => i.variety === variety && i.name === name)) {
+    if (src.items.some((i) => i.variety === variety && i.name === name))
       return false;
-    }
     return mutate(id, (c) => ({
       ...c,
       items: [{ variety, name, addedAt: Date.now() }, ...c.items],
@@ -144,14 +119,11 @@ export const collections = {
   remove_item(id, variety, name) {
     const src = find(id);
     if (!src) return false;
-    if (!src.items.some((i) => i.variety === variety && i.name === name)) {
+    if (!src.items.some((i) => i.variety === variety && i.name === name))
       return false;
-    }
     return mutate(id, (c) => ({
       ...c,
-      items: c.items.filter(
-        (i) => !(i.variety === variety && i.name === name)
-      ),
+      items: c.items.filter((i) => !(i.variety === variety && i.name === name)),
       updatedAt: Date.now(),
     }));
   },
@@ -165,20 +137,10 @@ export const collections = {
     return true;
   },
 
-  /** Move an item between two collections. */
-  moveItem(fromId, toId, variety, name) {
-    if (fromId === toId) return false;
-    const removed = collections.remove_item(fromId, variety, name);
-    if (!removed) return false;
-    collections.add(toId, variety, name);
-    return true;
-  },
-
   clear(id) {
     return mutate(id, (c) => ({ ...c, items: [], updatedAt: Date.now() }));
   },
 
-  /* ---- import / export ---- */
   exportJson(id) {
     const c = find(id);
     if (!c) return null;
@@ -195,7 +157,7 @@ export const collections = {
         },
       },
       null,
-      2
+      2,
     );
   },
 
@@ -213,16 +175,10 @@ export const collections = {
         })),
       },
       null,
-      2
+      2,
     );
   },
 
-  /**
-   * Import a collection JSON. Returns the new collection or null.
-   * Accepts both single-collection and multi-collection payloads,
-   * in which case only the first is imported (use importAll for
-   * the multi case).
-   */
   importJson(json) {
     try {
       const parsed = typeof json === "string" ? JSON.parse(json) : json;
@@ -232,7 +188,7 @@ export const collections = {
       if (!name) return null;
       const created = collections.create(
         uniqueName(name),
-        sanitizeDesc(payload.description || "")
+        sanitizeDesc(payload.description || ""),
       );
       if (!created) return null;
       const items = Array.isArray(payload.items) ? payload.items : [];
@@ -257,8 +213,8 @@ export const collections = {
       const list = Array.isArray(parsed?.collections)
         ? parsed.collections
         : Array.isArray(parsed)
-        ? parsed
-        : null;
+          ? parsed
+          : null;
       if (!list) return 0;
       let added = 0;
       for (const entry of list) {
@@ -272,9 +228,6 @@ export const collections = {
   },
 };
 
-/* ============================================================
-   INTERNAL
-   ============================================================ */
 function find(id) {
   return store.get().collections.find((c) => c.id === id) || null;
 }
@@ -284,9 +237,8 @@ function mutate(id, fn) {
   let changed = false;
   const next = existing.map((c) => {
     if (c.id !== id) return c;
-    const updated = fn(c);
     changed = true;
-    return updated;
+    return fn(c);
   });
   if (!changed) return false;
   store.set({ collections: next }, { persist: true });
@@ -305,17 +257,23 @@ function clone(c) {
 }
 
 function sanitizeName(name) {
-  const s = String(name || "").replace(/\s+/g, " ").trim();
-  if (!s) return "";
-  return s.slice(0, MAX_NAME);
+  const s = String(name || "")
+    .replace(/\s+/g, " ")
+    .trim();
+  return s ? s.slice(0, MAX_NAME) : "";
 }
 
 function sanitizeDesc(desc) {
-  return String(desc || "").replace(/\s+/g, " ").trim().slice(0, MAX_DESC);
+  return String(desc || "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, MAX_DESC);
 }
 
 function uniqueName(base) {
-  const existing = new Set(store.get().collections.map((c) => c.name.toLowerCase()));
+  const existing = new Set(
+    store.get().collections.map((c) => c.name.toLowerCase()),
+  );
   if (!existing.has(base.toLowerCase())) return base;
   let n = 2;
   while (existing.has(`${base} ${n}`.toLowerCase())) n++;
@@ -331,9 +289,6 @@ function genId() {
   );
 }
 
-/* ============================================================
-   CONVENIENCE — slugified file name for exports
-   ============================================================ */
 export function collectionFileName(collection) {
   const base = slug(collection?.name || "collection") || "collection";
   const d = new Date();
