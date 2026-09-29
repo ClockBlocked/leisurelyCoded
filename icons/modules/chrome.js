@@ -19,6 +19,8 @@ import { store }  from "./store.js";
 import { router } from "./router.js";
 import { toggle as togglePalette } from "./palette.js";
 
+import { VARIETY_GROUPS, VARIETY_GROUP_LABELS } from "./config.js";
+
 /* ============================================================
    DOM REFS
    ============================================================ */
@@ -113,65 +115,169 @@ function syncTopNav(route) {
   });
 }
 
-/* ============================================================
-   STYLE NAV
-   ============================================================ */
+
+
 function renderStyleNav() {
   if (!stylenavEl) return;
 
   const varieties = data.varieties();
-  const items = varieties.map((v) => {
-    const label = v.label || prettyVariety(v.key);
-    const chip = el("button", {
-      cls: "stylechip",
-      type: "button",
-      dataset: { variety: v.key },
-      attrs: {
-        "aria-pressed": "false",
-        title: v.available
-          ? `${v.count} icons in ${label}`
-          : `${label} — unavailable`,
-        disabled: v.available ? null : true,
-      },
-      style: v.available ? null : { opacity: "0.4", cursor: "not-allowed" },
-    },
-      el("span", { cls: "stylechip__dot" }),
-      el("span", { text: label }),
-      el("span", { cls: "stylechip__count", text: String(v.count) }),
-    );
+  const byKey = Object.fromEntries(varieties.map((v) => [v.key, v]));
 
-    chip.addEventListener("click", () => {
-      if (!v.available) return;
-      const current = store.variety.current();
+  // Split into primary (visible) and secondary (behind "More")
+  const primary = varieties.filter((v) => v.primary !== false && isPrimary(v.key));
+  const secondary = varieties.filter((v) => !primary.includes(v));
 
-      if (current === v.key) {
-        // Same chip — still navigate to the canonical URL if we
-        // aren't already there.
-        const r = router.current();
-        if (r?.name !== "variety" || r?.params?.key !== v.key) {
-          router.go(`/varieties/${v.key}`);
-        }
-        return;
-      }
+  const items = primary.map((v) => makeStyleChip(v));
 
-      store.variety.set(v.key);
-
-      const r = router.current();
-      if (r?.name === "variety") {
-        router.go(`/varieties/${v.key}`);
-      } else {
-        // Fragment transition — spinner shows, view re-renders.
-        router.refresh();
-      }
-    });
-
-    return chip;
-  });
+  if (secondary.length) {
+    items.push(makeMoreStylesButton(secondary, byKey));
+  }
 
   mount(stylenavEl, items);
   syncStyleNav(store.variety.current());
   queueMicrotask(() => scrollActiveIntoView("instant"));
 }
+
+function isPrimary(key) {
+  const coreAndSharp = [
+    ...VARIETY_GROUPS.core,
+    "sharp-solid",
+    "sharp-regular",
+  ];
+  return coreAndSharp.includes(key);
+}
+
+function makeStyleChip(v) {
+  const label = v.label || prettyVariety(v.key);
+  const chip = el("button", {
+    cls: "stylechip",
+    type: "button",
+    dataset: { variety: v.key },
+    attrs: {
+      "aria-pressed": "false",
+      title: v.available
+        ? `${v.count} icons in ${label}`
+        : `${label} — unavailable`,
+      disabled: v.available ? null : true,
+    },
+    style: v.available ? null : { opacity: "0.4", cursor: "not-allowed" },
+  },
+    el("span", { cls: "stylechip__dot" }),
+    el("span", { text: label }),
+    el("span", { cls: "stylechip__count", text: String(v.count) }),
+  );
+
+  chip.addEventListener("click", () => activateVariety(v));
+  return chip;
+}
+
+function activateVariety(v) {
+  if (!v.available) return;
+  const current = store.variety.current();
+
+  if (current === v.key) {
+    const r = router.current();
+    if (r?.name !== "variety" || r?.params?.key !== v.key) {
+      router.go(`/varieties/${v.key}`);
+    }
+    return;
+  }
+
+  store.variety.set(v.key);
+  const r = router.current();
+  if (r?.name === "variety") router.go(`/varieties/${v.key}`);
+  else router.refresh();
+}
+
+function makeMoreStylesButton(secondary, byKey) {
+  const btn = el("button", {
+    cls: "stylechip stylechip--more",
+    type: "button",
+    attrs: { "aria-haspopup": "menu", "aria-expanded": "false" },
+  },
+    el("span", { text: "More styles" }),
+    el("span", { cls: "stylechip__count", text: String(secondary.length) }),
+  );
+
+  btn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    openMoreMenu(btn, secondary, byKey);
+  });
+
+  return btn;
+}
+
+let moreMenuEl = null;
+
+function openMoreMenu(anchor, varieties, byKey) {
+  closeMoreMenu();
+
+  const menu = el("div", { cls: "more-menu", attrs: { role: "menu" } });
+  const groups = Object.entries(VARIETY_GROUPS);
+
+  for (const [groupId, keys] of groups) {
+    if (groupId === "core") continue; // already shown as primary
+    const inGroup = varieties.filter((v) => keys.includes(v.key));
+    if (!inGroup.length) continue;
+
+    menu.append(el("div", { cls: "more-menu__group", text:
+      VARIETY_GROUP_LABELS[groupId] || groupId }));
+
+    for (const v of inGroup) {
+      const item = el("button", {
+        cls: "more-menu__item",
+        type: "button",
+        attrs: { role: "menuitem" },
+        on: {
+          click: () => {
+            closeMoreMenu();
+            activateVariety(v);
+          },
+        },
+      },
+        el("span", { cls: "more-menu__dot" }),
+        el("span", { cls: "more-menu__label", text: v.label || v.key }),
+        el("span", { cls: "more-menu__count", text: String(v.count) }),
+      );
+      menu.append(item);
+    }
+  }
+
+  // Position under the anchor.
+  const rect = anchor.getBoundingClientRect();
+  menu.style.position = "fixed";
+  menu.style.top = `${rect.bottom + 6}px`;
+  menu.style.left = `${Math.min(rect.left, window.innerWidth - 300)}px`;
+  menu.style.zIndex = "200";
+
+  document.body.appendChild(menu);
+  moreMenuEl = menu;
+  anchor.setAttribute("aria-expanded", "true");
+
+  // Close on outside click
+  setTimeout(() => {
+    document.addEventListener("click", onDocClick, { once: true });
+  }, 0);
+
+  function onDocClick(e) {
+    if (moreMenuEl && !moreMenuEl.contains(e.target)) {
+      closeMoreMenu();
+    } else {
+      document.addEventListener("click", onDocClick, { once: true });
+    }
+  }
+}
+
+function closeMoreMenu() {
+  moreMenuEl?.remove();
+  moreMenuEl = null;
+  document.querySelectorAll(".stylechip--more[aria-expanded='true']")
+    .forEach((n) => n.setAttribute("aria-expanded", "false"));
+}
+
+
+
+
 
 function syncStyleNav(activeVariety) {
   if (!stylenavEl) return;
