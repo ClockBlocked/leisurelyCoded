@@ -1,27 +1,21 @@
 /* ============================================================
    ICON FORGE — js/sprite.js
-   Loads Font Awesome sprite files (in whatever shape your
-   Pro folder uses) and injects their <symbol>s into a hidden
-   <svg> mount.
+   Lazy-loading sprite registry.
 
-   Discovery strategy:
-     1. Try SPRITES.manifestUrl (./sprite-manifest.json).
-        If it exists and parses, that's the source of truth.
-     2. Otherwise, probe SPRITES.defaultCandidates under
-        SPRITES.defaultBase in parallel and keep whatever
-        succeeds.
+   Why lazy:
+     Pro+ sprite files are HUGE (60–70 MiB total, ~50k symbols).
+     Injecting them all at boot crashes the tab.
 
-   All symbols get normalised into safe IDs:
-       sym--{variety}--{name}
-   so <use href="#..."> works even with FA's odd ids like
-   "fa-solid fa-house".
+   New model:
+     • loadManifest()  → discovers varieties (URLs + labels)
+     • loadVariety(k)  → fetches ONE sprite, injects its symbols
+     • loadSprites()   → manifest + the requested initial variety
+     • registry.ensure(k) → returns a promise for one variety
 
-   Public API (unchanged from v1):
-     loadSprites(onProgress) → Promise<registry>
-     registry.{ isReady, ready, getVarieties, isVarietyAvailable,
-                listIcons, listAllIconNames, count, total,
-                has, get, varietiesFor, cloneSymbol,
-                svgString, exportString }
+   Public API mirrors the old one, plus:
+     registry.isLoaded(key)
+     registry.ensure(key)
+     registry.loadedVarieties()
    ============================================================ */
 
 import {
@@ -29,7 +23,7 @@ import {
   VARIETY_META,
   FALLBACK_SYMBOLS,
 } from "./config.js";
-import { log, slug, unique } from "./utils.js";
+import { log, slug } from "./utils.js";
 
 const PARSER = new DOMParser();
 
@@ -37,74 +31,75 @@ const PARSER = new DOMParser();
    STATE
    ============================================================ */
 const state = {
-  loaded: false,
-  loading: null,
+  manifestLoaded: false,
   mount: null,
-  varieties: Object.create(null), // key → { available, error, icons: [], count, label, blurb }
-  symbols: Object.create(null),   // safeId → { safeId, originalId, variety, name, viewBox, node }
-  byName: Object.create(null),    // name → Set<variety>
-  totals: { icons: 0, varieties: 0 },
+  varieties: Object.create(null),  // key → { url, label, blurb, available, loaded, loading, error, icons, count, primary }
+  symbols: Object.create(null),    // safeId → entry
+  byName: Object.create(null),     // name → Set<variety>
+  ensurePromises: Object.create(null), // key → Promise
+  totals: { icons: 0, loadedVarieties: 0 },
 };
 
 /* ============================================================
-   DISCOVERY
+   MANIFEST / DISCOVERY
    ============================================================ */
-async function discoverSprites() {
-  // ---- 1. Manifest ----
+async function discover() {
+  // 1. Try the manifest
   try {
     const res = await fetch(SPRITES.manifestUrl, { cache: "no-store" });
     if (res.ok) {
       const text = await res.text();
-      // Guard against the server returning index.html for 404s.
       if (/^\s*[{[]/.test(text)) {
         const manifest = JSON.parse(text);
         const list = normaliseManifest(manifest);
         if (list.length) {
-          log.info(`sprite manifest loaded — ${list.length} varieties declared`);
+          log.info(`manifest loaded — ${list.length} varieties declared`);
           return list;
         }
       }
     }
   } catch {
-    // Silent — manifest is optional.
+    /* optional */
   }
 
-  // ---- 2. Probe candidates ----
+  // 2. Fall back to probing the default candidates
   log.info("no manifest — probing default candidates");
   const base = SPRITES.defaultBase;
   const results = await Promise.all(
     SPRITES.defaultCandidates.map(async (cand) => {
-      const url = base + cand.file;
       try {
-        const res = await fetch(url, { method: "HEAD" });
+        const res = await fetch(base + cand.file, { method: "HEAD" });
         if (!res.ok) return null;
       } catch {
-        // HEAD may be blocked; fall through and let the real fetch decide.
+        /* fall through — some servers block HEAD */
       }
       return {
         key: cand.key,
-        url,
+        url: base + cand.file,
         label: cand.label,
         blurb: VARIETY_META[cand.key]?.blurb || "",
+        primary: true,
       };
     })
   );
-
-  // Keep the ones we *believe* exist. Actual GET will confirm.
   return results.filter(Boolean);
 }
 
 function normaliseManifest(manifest) {
   if (!manifest || typeof manifest !== "object") return [];
-  const base = typeof manifest.base === "string" ? manifest.base : SPRITES.defaultBase;
+  const base =
+    typeof manifest.base === "string" ? manifest.base : SPRITES.defaultBase;
   const list = Array.isArray(manifest.varieties) ? manifest.varieties : [];
   return list
-    .filter((v) => v && typeof v.key === "string" && typeof v.file === "string")
+    .filter(
+      (v) => v && typeof v.key === "string" && typeof v.file === "string"
+    )
     .map((v) => ({
       key: v.key,
       url: joinUrl(base, v.file),
       label: v.label || VARIETY_META[v.key]?.label || v.key,
       blurb: v.blurb || VARIETY_META[v.key]?.blurb || "",
+      primary: v.primary !== false,
     }));
 }
 
@@ -116,13 +111,9 @@ function joinUrl(base, file) {
 }
 
 /* ============================================================
-   PUBLIC: loadSprites
-   ------------------------------------------------------------
-   onProgress(done, total, varietyKey, phase)
+   PUBLIC
    ============================================================ */
-export function loadSprites(onProgress) {
-  if (state.loading) return state.loading;
-
+export async function loadSprites({ initial = null, onProgress } = {}) {
   state.mount = document.getElementById("sprite-mount");
   if (!state.mount) {
     const m = document.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -133,81 +124,72 @@ export function loadSprites(onProgress) {
     state.mount = m;
   }
 
-  state.loading = (async () => {
-    const discovered = await discoverSprites();
-    onProgress?.(0, discovered.length, null, "discovered");
+  // Discover once.
+  const discovered = await discover();
+  for (const v of discovered) {
+    state.varieties[v.key] = {
+      url: v.url,
+      label: v.label,
+      blurb: v.blurb,
+      primary: v.primary !== false,
+      available: true,  // optimistic until proven otherwise
+      loaded: false,
+      loading: false,
+      error: null,
+      icons: [],
+      count: 0,
+    };
+  }
+  state.manifestLoaded = true;
+  onProgress?.(0, discovered.length, null, "discovered");
 
-    let done = 0;
+  // Load the initial variety if requested.
+  if (initial && state.varieties[initial]) {
+    await ensure(initial);
+  }
 
-    await Promise.all(
-      discovered.map(async (v) => {
-        try {
-          const text = await fetchText(v.url);
-          const count = ingestSprite(v.key, text, v.url);
-          state.varieties[v.key] = {
-            available: count > 0,
-            error: count > 0 ? null : "no symbols parsed",
-            icons: state.varieties[v.key]?.icons ?? [],
-            count,
-            label: v.label,
-            blurb: v.blurb,
-          };
-          log.info(`loaded ${count} symbols for "${v.key}"`);
-        } catch (err) {
-          log.warn(`sprite "${v.key}" skipped:`, err.message);
-          state.varieties[v.key] = {
-            available: false,
-            error: err.message,
-            icons: [],
-            count: 0,
-            label: v.label,
-            blurb: v.blurb,
-          };
-        } finally {
-          done++;
-          onProgress?.(done, discovered.length, v.key, "loaded");
-        }
-      })
-    );
+  return registry;
+}
 
-    // If nothing loaded, inject fallbacks so the UI works.
-    const anyLoaded = Object.values(state.varieties).some((x) => x.available);
-    if (!anyLoaded) {
-      log.warn("no sprites loaded — injecting fallback symbols");
-      injectFallbacks();
+export async function ensure(key) {
+  if (!state.varieties[key]) return null;
+  if (state.varieties[key].loaded) return state.varieties[key];
+  if (state.ensurePromises[key]) return state.ensurePromises[key];
+
+  state.ensurePromises[key] = (async () => {
+    const v = state.varieties[key];
+    v.loading = true;
+    try {
+      const res = await fetch(v.url, { cache: "force-cache" });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const text = await res.text();
+      if (!/<svg[\s>]/i.test(text)) throw new Error("not an SVG sprite");
+      ingestSprite(key, text, v.url);
+      v.loaded = true;
+      v.available = v.count > 0;
+      v.error = v.count > 0 ? null : "no symbols";
+      log.info(`loaded ${v.count} symbols for "${key}"`);
+    } catch (err) {
+      v.available = false;
+      v.error = err.message;
+      v.count = 0;
+      log.warn(`sprite "${key}" failed: ${err.message}`);
+    } finally {
+      v.loading = false;
+      delete state.ensurePromises[key];
+      state.totals.loadedVarieties =
+        Object.values(state.varieties).filter((x) => x.loaded).length;
+      state.totals.icons = Object.keys(state.symbols).length;
     }
-
-    state.loaded = true;
-    state.totals.icons = Object.keys(state.symbols).length;
-    state.totals.varieties = Object.values(state.varieties).filter(
-      (x) => x.available
-    ).length;
-
-    log.info(
-      `sprite registry ready — ${state.totals.icons} icons across ${state.totals.varieties} varieties`
-    );
-
-    return registry;
+    return v;
   })();
 
-  return state.loading;
+  return state.ensurePromises[key];
 }
 
 /* ============================================================
-   FETCH + PARSE
+   INGEST
    ============================================================ */
-async function fetchText(url) {
-  const res = await fetch(url, { cache: "force-cache" });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  const text = await res.text();
-  // A server that returns index.html for missing files would
-  // give us a valid 200. Guard against that.
-  if (!/<svg[\s>]/i.test(text)) {
-    throw new Error("not an SVG sprite");
-  }
-  return text;
-}
-
 function ingestSprite(variety, svgText, url) {
   const doc = PARSER.parseFromString(svgText, "image/svg+xml");
   if (doc.querySelector("parsererror")) {
@@ -215,8 +197,8 @@ function ingestSprite(variety, svgText, url) {
   }
 
   const symbols = doc.querySelectorAll("symbol");
-  let count = 0;
   const icons = [];
+  let count = 0;
 
   for (const sym of symbols) {
     const originalId = sym.getAttribute("id") || "";
@@ -245,22 +227,11 @@ function ingestSprite(variety, svgText, url) {
   }
 
   icons.sort((a, b) => a.localeCompare(b));
-  state.varieties[variety] = state.varieties[variety] || {};
   state.varieties[variety].icons = icons;
-  state.varieties[variety].available = count > 0;
-  state.varieties[variety].error = count > 0 ? null : "no symbols";
   state.varieties[variety].count = count;
-
   return count;
 }
 
-/**
- * Extract a clean icon name from FA's odd symbol IDs.
- *   "fa-solid fa-house"           → "house"
- *   "fa-light fa-heart"           → "heart"
- *   "fa-sharp fa-solid fa-bolt"   → "bolt"
- *   "fa-sharp-solid fa-cat"       → "cat"
- */
 function extractIconName(originalId) {
   const tokens = originalId.trim().split(/\s+/);
   const modifiers = new Set([
@@ -290,11 +261,26 @@ function cloneToMount(sym, safeId) {
 }
 
 /* ============================================================
-   FALLBACK (dev mode)
+   FALLBACK (dev-only)
    ============================================================ */
-function injectFallbacks() {
+export function injectFallbacks() {
   const varieties = SPRITES.defaultCandidates.map((c) => c.key);
   for (const variety of varieties) {
+    if (!state.varieties[variety]) {
+      state.varieties[variety] = {
+        url: "",
+        label: VARIETY_META[variety]?.label || variety,
+        blurb: VARIETY_META[variety]?.blurb || "",
+        primary: true,
+        available: true,
+        loaded: true,
+        loading: false,
+        error: null,
+        icons: [],
+        count: 0,
+      };
+    }
+
     const icons = [];
     for (const [name, d] of Object.entries(FALLBACK_SYMBOLS)) {
       const safeId = makeSafeId(variety, name);
@@ -337,41 +323,69 @@ function injectFallbacks() {
       (state.byName[name] ||= new Set()).add(variety);
       icons.push(name);
     }
+
     icons.sort((a, b) => a.localeCompare(b));
-    state.varieties[variety] = {
-      available: true,
-      error: null,
-      icons,
-      count: icons.length,
-      label: VARIETY_META[variety]?.label || variety,
-      blurb: VARIETY_META[variety]?.blurb || "",
-    };
+    state.varieties[variety].icons = icons;
+    state.varieties[variety].count = icons.length;
+    state.varieties[variety].available = true;
   }
+  state.totals.loadedVarieties =
+    Object.values(state.varieties).filter((x) => x.loaded).length;
+  state.totals.icons = Object.keys(state.symbols).length;
 }
 
 /* ============================================================
-   REGISTRY (public API — unchanged)
+   REGISTRY
    ============================================================ */
 export const registry = {
-  isReady() { return state.loaded; },
-  ready() { return state.loading || Promise.resolve(registry); },
+  isReady() {
+    return state.manifestLoaded;
+  },
 
-  getVarieties() {
-    return Object.entries(state.varieties).map(([key, v]) => ({
-      key,
-      available: v.available,
-      count: v.count,
-      error: v.error,
-      icons: v.icons,
-      label: v.label || VARIETY_META[key]?.label || key,
-      blurb: v.blurb || VARIETY_META[key]?.blurb || "",
-    }));
+  ready() {
+    return Promise.resolve(registry);
+  },
+
+  /* --- loading --- */
+  ensure(key) {
+    return ensure(key);
+  },
+
+  isLoaded(key) {
+    return !!state.varieties[key]?.loaded;
   },
 
   isVarietyAvailable(variety) {
     return !!state.varieties[variety]?.available;
   },
 
+  isLoading(key) {
+    return !!state.varieties[key]?.loading;
+  },
+
+  /* --- meta --- */
+  getVarieties() {
+    return Object.entries(state.varieties).map(([key, v]) => ({
+      key,
+      available: v.available,
+      loaded: v.loaded,
+      loading: v.loading,
+      count: v.count,
+      error: v.error,
+      icons: v.icons,
+      label: v.label || VARIETY_META[key]?.label || key,
+      blurb: v.blurb || VARIETY_META[key]?.blurb || "",
+      primary: v.primary !== false,
+    }));
+  },
+
+  loadedVarieties() {
+    return Object.keys(state.varieties).filter(
+      (k) => state.varieties[k].loaded
+    );
+  },
+
+  /* --- reads --- */
   listIcons(variety) {
     return state.varieties[variety]?.icons ?? [];
   },
@@ -385,7 +399,7 @@ export const registry = {
   },
 
   total() {
-    return Object.values(state.symbols).length;
+    return Object.keys(state.symbols).length;
   },
 
   has(variety, name) {
@@ -435,7 +449,6 @@ function buildInlineSvg(entry, opts = {}) {
     attrs = "",
   } = opts;
 
-  const vb = entry.viewBox;
   const dim = size ? ` width="${size}" height="${size}"` : "";
   const clsAttr = cls ? ` class="${cls}"` : "";
   const colorAttr = color ? ` color="${color}"` : "";
@@ -447,21 +460,17 @@ function buildInlineSvg(entry, opts = {}) {
     ? ` role="img" aria-label="${escapeAttr(ariaLabel)}"`
     : ' aria-hidden="true"';
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${vb}"${dim}${clsAttr}${colorAttr}${strokeAttr}${roleAttr} ${attrs}><use href="#${entry.safeId}"/></svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${entry.viewBox}"${dim}${clsAttr}${colorAttr}${strokeAttr}${roleAttr} ${attrs}><use href="#${entry.safeId}"/></svg>`;
 }
 
 function buildExportSvg(entry, opts = {}) {
   const { color = "currentColor", stroke = null, size = 24 } = opts;
-
   const inner = serializeSymbolInner(entry.node);
-  const vb = entry.viewBox;
-
   const paintAttrs =
     stroke != null
       ? `fill="none" stroke="${color}" stroke-width="${stroke}" stroke-linecap="round" stroke-linejoin="round"`
       : `fill="${color}"`;
-
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${vb}" width="${size}" height="${size}" ${paintAttrs}>
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${entry.viewBox}" width="${size}" height="${size}" ${paintAttrs}>
 ${inner}
 </svg>`;
 }
