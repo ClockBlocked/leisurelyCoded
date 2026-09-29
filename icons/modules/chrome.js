@@ -1,52 +1,27 @@
 /* ============================================================
-   ICON FORGE — js/chrome.js
-   Renders and maintains the two sticky nav bars:
-
-     • Top nav     → page-level routes (Home, Categories,
-                     Varieties, Bookmarks, Collections)
-     • Style nav   → variety chips (Solid, Sharp, Duotone…)
-
-   With the Pro+ sprite folder, there are 37 varieties. The
-   style nav therefore shows only the "primary" chips inline
-   and tucks the rest behind a "More styles" popover grouped
-   by family.
-
-   Also wires:
-     • The bookmark counter pill (with pop animation)
-     • A ⌘K palette hint button in the top bar
-     • Active-state sync with the router
-     • ASYNC variety activation (lazy sprite loading)
+   modules/chrome.js
    ============================================================ */
 
 import { el, mount, log } from "./utils.js";
 import { data, invalidate } from "./data.js";
-import { store }   from "./store.js";
-import { router }  from "./router.js";
+import { store } from "./store.js";
+import { router } from "./router.js";
 import { registry } from "./sprite.js";
-import { toast }   from "./toast.js";
+import { toast } from "./toast.js";
 import { toggle as togglePalette } from "./palette.js";
-import { VARIETY_GROUPS, VARIETY_GROUP_LABELS } from "./config.js";
+import { VARIETY_GROUPS, VARIETY_GROUP_LABELS, UI } from "./config.js";
 
-/* ============================================================
-   DOM REFS
-   ============================================================ */
 let topnavEl;
 let stylenavEl;
 let bookmarkPillEl;
 
-/* How many chips before we tuck the rest behind "More" */
-const MAX_INLINE_CHIPS = 10;
-
-/* ============================================================
-   PUBLIC
-   ============================================================ */
 export const chrome = {
   init() {
-    topnavEl       = document.getElementById("topnav");
-    stylenavEl     = document.getElementById("stylenav");
+    topnavEl = document.getElementById("topnav");
+    stylenavEl = document.getElementById("stylenav");
     bookmarkPillEl = document.getElementById("bookmarkCount");
 
-    if (!topnavEl)   log.warn("topnav missing");
+    if (!topnavEl) log.warn("topnav missing");
     if (!stylenavEl) log.warn("stylenav missing");
 
     renderTopNav();
@@ -54,7 +29,6 @@ export const chrome = {
     syncBookmarkPill(store.bookmark.all().length);
     wirePaletteHint();
 
-    // Store → chrome sync
     store.subscribe((s, patch) => {
       if ("variety" in patch) syncStyleNav(s.variety);
       if ("bookmarks" in patch) {
@@ -63,32 +37,24 @@ export const chrome = {
       }
     });
 
-    // Router → top-nav sync
     router.onChange((route) => syncTopNav(route));
-
-    // Make sure the active style chip is visible on first paint.
     queueMicrotask(() => scrollActiveIntoView("instant"));
   },
 
-  /** Public: force a refresh of the style nav after new
-      varieties finish loading. */
   refreshStyleNav() {
     renderStyleNav();
   },
 };
 
-/* ============================================================
-   TOP NAV
-   ============================================================ */
 const TOP_LINKS = [
   {
     label: "Home",
     path: "/",
     match: ["home", "category", "variety", "search", "collection"],
   },
-  { label: "Categories",  path: "/categories",  match: ["categories"] },
-  { label: "Varieties",   path: "/varieties",   match: ["varieties"] },
-  { label: "Bookmarks",   path: "/bookmarks",   match: ["bookmarks"] },
+  { label: "Categories", path: "/categories", match: ["categories"] },
+  { label: "Varieties", path: "/varieties", match: ["varieties"] },
+  { label: "Bookmarks", path: "/bookmarks", match: ["bookmarks"] },
   { label: "Collections", path: "/collections", match: ["collections"] },
 ];
 
@@ -101,15 +67,11 @@ function renderTopNav() {
       attrs: { href: "#" + link.path, "data-route": link.path },
       dataset: { match: link.match.join("|") },
     });
-
     a.append(el("span", { text: link.label }));
-
     if (link.path === "/bookmarks") {
-      a.append(el("span", {
-        cls: "pill",
-        attrs: { id: "bookmarkCount" },
-        text: "0",
-      }));
+      a.append(
+        el("span", { cls: "pill", attrs: { id: "bookmarkCount" }, text: "0" }),
+      );
     }
     return a;
   });
@@ -120,9 +82,7 @@ function renderTopNav() {
 
 function syncTopNav(route) {
   if (!topnavEl) return;
-
-  const links = topnavEl.querySelectorAll(".topnav__link");
-  links.forEach((a) => {
+  topnavEl.querySelectorAll(".topnav__link").forEach((a) => {
     const matches = (a.dataset.match || "").split("|");
     const isActive = matches.includes(route.name);
     if (isActive) a.setAttribute("aria-current", "page");
@@ -130,35 +90,16 @@ function syncTopNav(route) {
   });
 }
 
-/* ============================================================
-   STYLE NAV
-   ------------------------------------------------------------
-   With 37 varieties we can't show them all inline. Strategy:
-
-     • Show chips marked "primary: true" in the manifest, up to
-       MAX_INLINE_CHIPS.
-     • Everything else goes behind a "More styles" popover,
-       grouped by family (Sharp / Slab / Jelly / etc.).
-     • If the manifest marked fewer than MAX_INLINE_CHIPS as
-       primary, top up with additional varieties so the bar
-       isn't sparse.
-   ============================================================ */
 function renderStyleNav() {
   if (!stylenavEl) return;
 
   const varieties = data.varieties();
-  const byKey = Object.fromEntries(varieties.map((v) => [v.key, v]));
-
-  // Split into inline vs. tucked away.
   const inline = pickInlineVarieties(varieties);
   const inlineKeys = new Set(inline.map((v) => v.key));
   const tucked = varieties.filter((v) => !inlineKeys.has(v.key));
 
   const items = inline.map((v) => makeStyleChip(v));
-
-  if (tucked.length) {
-    items.push(makeMoreStylesButton(tucked, byKey));
-  }
+  if (tucked.length) items.push(makeMoreStylesButton(tucked));
 
   mount(stylenavEl, items);
   syncStyleNav(store.variety.current());
@@ -166,30 +107,19 @@ function renderStyleNav() {
 }
 
 function pickInlineVarieties(varieties) {
-  // Manifest-driven: primary:true wins.
   const manifestPrimary = varieties.filter((v) => v.primary !== false);
-
-  // Core fallback list — used to top up if the manifest didn't
-  // mark enough.
-  const coreOrder = [
-    ...VARIETY_GROUPS.core,
-    "sharp-solid",
-    "sharp-regular",
-  ];
-
-  // Start with manifest primaries, in manifest order.
+  const coreOrder = [...VARIETY_GROUPS.core, "sharp-solid", "sharp-regular"];
   const picked = [];
   const seen = new Set();
 
   for (const v of manifestPrimary) {
-    if (picked.length >= MAX_INLINE_CHIPS) break;
+    if (picked.length >= UI.maxInlineChips) break;
     picked.push(v);
     seen.add(v.key);
   }
 
-  // If we don't have enough yet, top up by core order.
   for (const key of coreOrder) {
-    if (picked.length >= MAX_INLINE_CHIPS) break;
+    if (picked.length >= UI.maxInlineChips) break;
     if (seen.has(key)) continue;
     const v = varieties.find((x) => x.key === key);
     if (v) {
@@ -198,12 +128,7 @@ function pickInlineVarieties(varieties) {
     }
   }
 
-  // Re-sort by manifest order so the bar is stable.
-  return picked.sort((a, b) => {
-    const ai = varieties.indexOf(a);
-    const bi = varieties.indexOf(b);
-    return ai - bi;
-  });
+  return picked.sort((a, b) => varieties.indexOf(a) - varieties.indexOf(b));
 }
 
 function makeStyleChip(v) {
@@ -223,12 +148,11 @@ function makeStyleChip(v) {
     },
   };
 
-  // Only attach a style override when we actually need one.
-  if (isDisabled) {
-    opts.style = { opacity: "0.4", cursor: "not-allowed" };
-  }
+  if (isDisabled) opts.style = { opacity: "0.4", cursor: "not-allowed" };
 
-  const chip = el("button", opts,
+  const chip = el(
+    "button",
+    opts,
     el("span", { cls: "stylechip__dot" }),
     el("span", { text: label }),
     el("span", {
@@ -241,24 +165,15 @@ function makeStyleChip(v) {
   return chip;
 }
 
-/* ============================================================
-   ASYNC VARIETY ACTIVATION
-   ------------------------------------------------------------
-   If the variety isn't loaded yet, fetch it first. The chip
-   shows a spinner ring while fetching; the router's fragment
-   spinner handles the actual view swap.
-   ============================================================ */
 async function activateVariety(v, chipEl) {
   const current = store.variety.current();
   const sameChip = current === v.key;
 
-  // Ensure the sprite is loaded before switching.
   if (!registry.isLoaded(v.key)) {
     if (chipEl) chipEl.classList.add("is-loading");
     try {
       await registry.ensure(v.key);
       invalidate();
-      // Refresh the chip's count now that it's loaded.
       refreshChipCount(v.key);
     } catch {
       toast("Couldn't load that variety", { variant: "error" });
@@ -269,7 +184,6 @@ async function activateVariety(v, chipEl) {
   }
 
   if (sameChip) {
-    // Already active — navigate to its canonical page if we're not there.
     const r = router.current();
     if (r?.name !== "variety" || r?.params?.key !== v.key) {
       router.go(`/varieties/${v.key}`);
@@ -279,11 +193,8 @@ async function activateVariety(v, chipEl) {
 
   store.variety.set(v.key);
   const r = router.current();
-  if (r?.name === "variety") {
-    router.go(`/varieties/${v.key}`);
-  } else {
-    router.refresh();
-  }
+  if (r?.name === "variety") router.go(`/varieties/${v.key}`);
+  else router.refresh();
 }
 
 function refreshChipCount(key) {
@@ -309,12 +220,10 @@ function scrollActiveIntoView(behavior = "smooth") {
   if (!stylenavEl) return;
   const active = stylenavEl.querySelector('.stylechip[aria-pressed="true"]');
   if (!active) return;
-
   const { offsetLeft: aLeft, offsetWidth: aWidth } = active;
   const { scrollLeft, clientWidth } = stylenavEl;
   const aRight = aLeft + aWidth;
   const sRight = scrollLeft + clientWidth;
-
   if (aLeft < scrollLeft + 16 || aRight > sRight - 16) {
     const target = aLeft - clientWidth / 2 + aWidth / 2;
     try {
@@ -325,18 +234,17 @@ function scrollActiveIntoView(behavior = "smooth") {
   }
 }
 
-/* ============================================================
-   MORE STYLES POPOVER
-   ============================================================ */
 let moreMenuEl = null;
 
-function makeMoreStylesButton(secondary, byKey) {
-  const btn = el("button", {
-    cls: "stylechip stylechip--more",
-    type: "button",
-    attrs: { "aria-haspopup": "menu", "aria-expanded": "false" },
-    title: `${secondary.length} more styles`,
-  },
+function makeMoreStylesButton(secondary) {
+  const btn = el(
+    "button",
+    {
+      cls: "stylechip stylechip--more",
+      type: "button",
+      attrs: { "aria-haspopup": "menu", "aria-expanded": "false" },
+      title: `${secondary.length} more styles`,
+    },
     el("span", { text: "More" }),
     el("span", { cls: "stylechip__count", text: String(secondary.length) }),
   );
@@ -344,34 +252,27 @@ function makeMoreStylesButton(secondary, byKey) {
   btn.addEventListener("click", (e) => {
     e.stopPropagation();
     if (moreMenuEl) closeMoreMenu();
-    else openMoreMenu(btn, secondary, byKey);
+    else openMoreMenu(btn, secondary);
   });
-
   return btn;
 }
 
-function openMoreMenu(anchor, varieties, byKey) {
+function openMoreMenu(anchor, varieties) {
   closeMoreMenu();
-
   const menu = el("div", { cls: "more-menu", attrs: { role: "menu" } });
 
-  // Group by VARIETY_GROUPS families; anything not covered lands
-  // in a final "Other" section.
   const seen = new Set();
-  const groups = Object.entries(VARIETY_GROUPS);
-
-  for (const [groupId, keys] of groups) {
-    if (groupId === "core") continue; // already inline
+  for (const [groupId, keys] of Object.entries(VARIETY_GROUPS)) {
+    if (groupId === "core") continue;
     const inGroup = varieties.filter((v) => keys.includes(v.key));
     if (!inGroup.length) continue;
-
     inGroup.forEach((v) => seen.add(v.key));
-
-    menu.append(el("div", {
-      cls: "more-menu__group",
-      text: VARIETY_GROUP_LABELS[groupId] || groupId,
-    }));
-
+    menu.append(
+      el("div", {
+        cls: "more-menu__group",
+        text: VARIETY_GROUP_LABELS[groupId] || groupId,
+      }),
+    );
     for (const v of inGroup) menu.append(makeMenuItem(v));
   }
 
@@ -381,15 +282,11 @@ function openMoreMenu(anchor, varieties, byKey) {
     for (const v of leftovers) menu.append(makeMenuItem(v));
   }
 
-  // Position under the anchor.
   const rect = anchor.getBoundingClientRect();
   const menuWidth = 300;
   menu.style.position = "fixed";
   menu.style.top = `${rect.bottom + 6}px`;
-  menu.style.left = `${Math.max(
-    8,
-    Math.min(rect.left, window.innerWidth - menuWidth - 8)
-  )}px`;
+  menu.style.left = `${Math.max(8, Math.min(rect.left, window.innerWidth - menuWidth - 8))}px`;
   menu.style.width = `${menuWidth}px`;
   menu.style.zIndex = "200";
 
@@ -397,7 +294,6 @@ function openMoreMenu(anchor, varieties, byKey) {
   moreMenuEl = menu;
   anchor.setAttribute("aria-expanded", "true");
 
-  // Close on outside click.
   setTimeout(() => {
     document.addEventListener("click", onDocClick, { once: true });
   }, 0);
@@ -413,11 +309,13 @@ function openMoreMenu(anchor, varieties, byKey) {
 
 function makeMenuItem(v) {
   const active = store.variety.current() === v.key;
-  const item = el("button", {
-    cls: "more-menu__item" + (active ? " is-active" : ""),
-    type: "button",
-    attrs: { role: "menuitem" },
-  },
+  const item = el(
+    "button",
+    {
+      cls: "more-menu__item" + (active ? " is-active" : ""),
+      type: "button",
+      attrs: { role: "menuitem" },
+    },
     el("span", { cls: "more-menu__dot" }),
     el("span", { cls: "more-menu__label", text: v.label || v.key }),
     el("span", {
@@ -425,12 +323,10 @@ function makeMenuItem(v) {
       text: v.loaded ? String(v.count) : "·",
     }),
   );
-
   item.addEventListener("click", () => {
     closeMoreMenu();
     activateVariety(v, null);
   });
-
   return item;
 }
 
@@ -442,13 +338,10 @@ function closeMoreMenu() {
     .forEach((n) => n.setAttribute("aria-expanded", "false"));
 }
 
-/* ============================================================
-   BOOKMARK PILL
-   ============================================================ */
 function syncBookmarkPill(count) {
-  if (!bookmarkPillEl) bookmarkPillEl = document.getElementById("bookmarkCount");
+  if (!bookmarkPillEl)
+    bookmarkPillEl = document.getElementById("bookmarkCount");
   if (!bookmarkPillEl) return;
-
   bookmarkPillEl.textContent = String(count);
   bookmarkPillEl.style.display = count > 0 ? "" : "none";
 }
@@ -461,9 +354,6 @@ function bouncePill() {
   setTimeout(() => bookmarkPillEl?.classList.remove("is-pop"), 520);
 }
 
-/* ============================================================
-   PALETTE HINT BUTTON
-   ============================================================ */
 function wirePaletteHint() {
   const tools = document.querySelector(".topbar__tools");
   if (!tools) return;
@@ -490,16 +380,13 @@ function wirePaletteHint() {
   else tools.appendChild(btn);
 }
 
-/* ============================================================
-   UTIL
-   ============================================================ */
 function prettyVariety(key) {
-  return key.split("-").map((s) => s[0].toUpperCase() + s.slice(1)).join(" ");
+  return key
+    .split("-")
+    .map((s) => s[0].toUpperCase() + s.slice(1))
+    .join(" ");
 }
 
-/* ============================================================
-   Exposed for external triggers
-   ============================================================ */
 export function scrollToActiveVariety() {
   scrollActiveIntoView("smooth");
 }
