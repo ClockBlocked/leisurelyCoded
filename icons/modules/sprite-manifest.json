@@ -1,0 +1,16 @@
+{
+  "$comment": "Icon Forge sprite manifest. Rename to sprite-manifest.json to activate. Delete or rename to fall back to auto-discovery.",
+  "base": "./fontawesome/sprites/",
+  "varieties": [
+    { "key": "solid",         "file": "solid.svg",         "label": "Solid",         "blurb": "Bold, filled shapes with maximum punch." },
+    { "key": "regular",       "file": "regular.svg",       "label": "Regular",       "blurb": "Refined line icons with a lighter touch." },
+    { "key": "light",         "file": "light.svg",         "label": "Light",         "blurb": "Airy hairlines that whisper." },
+    { "key": "thin",          "file": "thin.svg",          "label": "Thin",          "blurb": "Featherweight strokes for editorial." },
+    { "key": "duotone",       "file": "duotone.svg",       "label": "Duotone",       "blurb": "Two-tone depth for icons that pop." },
+    { "key": "brands",        "file": "brands.svg",        "label": "Brands",        "blurb": "Logos for social and integrations." },
+    { "key": "sharp-solid",   "file": "sharp-solid.svg",   "label": "Sharp Solid",   "blurb": "Crisp corners for UI chrome." },
+    { "key": "sharp-regular", "file": "sharp-regular.svg", "label": "Sharp Regular", "blurb": "Sharp outlines for tight grids." },
+    { "key": "sharp-light",   "file": "sharp-light.svg",   "label": "Sharp Light",   "blurb": "Sharp and light — precision hairlines." },
+    { "key": "sharp-thin",    "file": "sharp-thin.svg",    "label": "Sharp Thin",    "blurb": "The lightest sharp variant." }
+  ]
+}
