@@ -205,6 +205,10 @@ function searchRow() {
   );
 }
 
+
+
+const PAGE_SIZE = 150;
+
 function buildTiles(variety, names) {
   if (!names.length) {
     return emptyState(
@@ -212,10 +216,46 @@ function buildTiles(variety, names) {
       "Try a different filter — or clear the input with Escape.",
     );
   }
+
   const grid = el("div", { cls: "grid", role: "list" });
-  names.forEach((name, i) => grid.append(tile(variety, name, i)));
-  return grid;
+  const sentinel = el("div", {
+    attrs: { "aria-hidden": "true" },
+    style: { height: "1px", marginTop: "24px" },
+  });
+  const wrapper = el("div", { cls: "variety-grid-wrap" }, grid, sentinel);
+
+  let rendered = 0;
+  const total = names.length;
+
+  function renderMore() {
+    const end = Math.min(rendered + PAGE_SIZE, total);
+    const slice = names.slice(rendered, end);
+    slice.forEach((name, i) =>
+      grid.append(tile(variety, name, rendered + i))
+    );
+    rendered = end;
+    if (rendered >= total) {
+      observer.disconnect();
+      sentinel.remove();
+    }
+  }
+
+  renderMore();
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      for (const e of entries) {
+        if (e.isIntersecting) renderMore();
+      }
+    },
+    { rootMargin: "400px 0px" }
+  );
+  observer.observe(sentinel);
+
+  return wrapper;
 }
+
+
 
 function prettyVariety(key) {
   return key.split("-").map((s) => s[0].toUpperCase() + s.slice(1)).join(" ");
