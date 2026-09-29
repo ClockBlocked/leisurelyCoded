@@ -21,7 +21,7 @@ export const TIMING = {
 
 export const SPRITES = {
   manifestUrl: "./sprite-manifest.json",
-  defaultBase: "./fontawesome/sprites/",
+  defaultBase: "../fontawesome/sprites/",
   defaultCandidates: [
     { key: "solid", file: "solid.svg", label: "Solid" },
     { key: "regular", file: "regular.svg", label: "Regular" },
