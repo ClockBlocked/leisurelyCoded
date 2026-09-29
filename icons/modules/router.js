@@ -1,8 +1,3 @@
-
-
-
-
-
 /* ============================================================
    ICON FORGE — js/router.js
    Hash-based router. The single orchestrator of full vs.
@@ -10,26 +5,23 @@
    progress bar or spinner during navigation.
 
    Route shapes:
-     #/                     → home          (full)
-     #/categories           → categories    (full)
-     #/categories/:key      → category      (full)
-     #/varieties            → varieties     (full)
-     #/varieties/:key       → variety       (full)
-     #/bookmarks            → bookmarks     (full)
-     #/search?q=…           → search        (fragment)
+     #/                        → home          (full)
+     #/categories              → categories    (full)
+     #/categories/:key         → category      (full)
+     #/varieties               → varieties     (full)
+     #/varieties/:key          → variety       (full)
+     #/bookmarks               → bookmarks     (full)
+     #/collections             → collections   (full)
+     #/collections/:id         → collection    (full)
+     #/search?q=…              → search        (fragment)
 
    Level decision:
      • Same route name + only query differs  → fragment
      • Route declared as "fragment"          → fragment
      • Otherwise                             → full
-
-   The renderer is injected at init(). It must return a Promise
-   that resolves when the view is painted; the router will hold
-   the loading UX until then, plus an artificial delay from
-   TIMING so the animations stay legible.
    ============================================================ */
 
-import { TIMING, UI } from "./config.js";
+import { TIMING } from "./config.js";
 import { progress } from "./progress.js";
 import { spinner }  from "./spinner.js";
 import { log } from "./utils.js";
@@ -38,13 +30,15 @@ import { log } from "./utils.js";
    1. ROUTE TABLE
    ============================================================ */
 const ROUTES = [
-  { name: "home",       pattern: /^\/?$/,                       level: "full",     params: [] },
-  { name: "categories", pattern: /^\/categories\/?$/,           level: "full",     params: [] },
-  { name: "category",   pattern: /^\/categories\/([^/]+)\/?$/,  level: "full",     params: ["key"] },
-  { name: "varieties",  pattern: /^\/varieties\/?$/,            level: "full",     params: [] },
-  { name: "variety",    pattern: /^\/varieties\/([^/]+)\/?$/,   level: "full",     params: ["key"] },
-  { name: "bookmarks",  pattern: /^\/bookmarks\/?$/,            level: "full",     params: [] },
-  { name: "search",     pattern: /^\/search\/?$/,               level: "fragment", params: [] },
+  { name: "home",        pattern: /^\/?$/,                         level: "full",     params: [] },
+  { name: "categories",  pattern: /^\/categories\/?$/,             level: "full",     params: [] },
+  { name: "category",    pattern: /^\/categories\/([^/]+)\/?$/,    level: "full",     params: ["key"] },
+  { name: "varieties",   pattern: /^\/varieties\/?$/,              level: "full",     params: [] },
+  { name: "variety",     pattern: /^\/varieties\/([^/]+)\/?$/,     level: "full",     params: ["key"] },
+  { name: "bookmarks",   pattern: /^\/bookmarks\/?$/,              level: "full",     params: [] },
+  { name: "collections", pattern: /^\/collections\/?$/,            level: "full",     params: [] },
+  { name: "collection",  pattern: /^\/collections\/([^/]+)\/?$/,   level: "full",     params: ["id"] },
+  { name: "search",      pattern: /^\/search\/?$/,                 level: "fragment", params: [] },
 ];
 
 const DEFAULT_PATH = "/";
@@ -53,9 +47,9 @@ const DEFAULT_PATH = "/";
    2. STATE
    ============================================================ */
 const state = {
-  current: null,     // parsed route object
-  renderer: null,    // async (route) => void
-  token: 0,          // increments per transition (cancels stale)
+  current: null,
+  renderer: null,
+  token: 0,
   booted: false,
 };
 
@@ -65,12 +59,6 @@ const listeners = new Set();
    3. PUBLIC API
    ============================================================ */
 export const router = {
-  /**
-   * Boot the router.
-   * @param {object} opts
-   * @param {(route) => Promise<void>} opts.render
-   * @param {(route) => void} [opts.onChange]
-   */
   init({ render, onChange } = {}) {
     if (state.booted) return;
     state.booted = true;
@@ -79,22 +67,19 @@ export const router = {
 
     window.addEventListener("hashchange", onHashChange, { passive: true });
 
-    // Kick off the initial render without a visible transition.
+    // Initial render (no progress bar — the app owns boot UX).
     const route = parseRoute(readHash());
     state.current = route;
+    document.documentElement.dataset.route = route.name;
     notify(route, { initial: true });
 
-    // Use microtask so the DOM has had a chance to settle.
-    Promise.resolve().then(() => {
-      // Initial render: no artificial delay, no progress bar.
-      // The app boots under whatever splash the host page wants.
-      return state.renderer(route).catch((err) => {
+    Promise.resolve().then(() =>
+      state.renderer(route).catch((err) => {
         log.error("initial render failed:", err);
-      });
-    });
+      })
+    );
   },
 
-  /** Programmatic navigation. */
   go(path, { replace = false } = {}) {
     const next = normalizePath(path);
     if (replace) {
@@ -106,7 +91,6 @@ export const router = {
     }
   },
 
-  /** Force a re-run of the current route. */
   refresh() {
     onHashChange();
   },
@@ -115,18 +99,15 @@ export const router = {
     return state.current;
   },
 
-  /** Build an href string for a given path/params. */
   href(path) {
     return "#" + normalizePath(path);
   },
 
-  /** Subscribe to route changes (outside of the render cycle). */
   onChange(fn) {
     listeners.add(fn);
     return () => listeners.delete(fn);
   },
 
-  /** Names of the currently active route. */
   isActive(name) {
     return state.current?.name === name;
   },
@@ -150,14 +131,12 @@ function normalizePath(path) {
 let lastSeenHash = "";
 function onHashChange() {
   const rawHash = location.hash;
-  // Chromium sometimes fires hashchange with the same value.
   if (rawHash === lastSeenHash) return;
   lastSeenHash = rawHash;
 
   const route = parseRoute(readHash());
   transition(route).catch((err) => {
     log.error("transition failed:", err);
-    // Always release the UX, even if the render crashed.
     progress.finish();
     spinner.hide();
   });
@@ -167,7 +146,6 @@ function onHashChange() {
    5. PARSE
    ============================================================ */
 function parseRoute(raw) {
-  // Split path & query: "/search?q=arrow" → ["/search", "q=arrow"]
   const [pathPart, queryPart = ""] = String(raw).split("?");
   const path = pathPart.startsWith("/") ? pathPart : "/" + pathPart;
 
@@ -185,7 +163,6 @@ function parseRoute(raw) {
     break;
   }
 
-  // Fallback: home
   if (!matched) matched = ROUTES[0];
 
   const query = Object.fromEntries(new URLSearchParams(queryPart));
@@ -206,43 +183,30 @@ function parseRoute(raw) {
 async function transition(next) {
   const prev = state.current;
   const token = ++state.token;
-
-  // Are we superseded by another transition? Bail.
   const stale = () => token !== state.token;
 
-  // Determine level: explicit override wins.
   const level = pickLevel(prev, next);
 
-  // Update store + listeners BEFORE render so the nav highlight
-  // and title reflect the destination during the load.
   state.current = next;
-  notify(next, { from: prev, level });
   document.documentElement.dataset.route = next.name;
+  notify(next, { from: prev, level });
 
   if (stale()) return;
 
-  // ---------- FULL PAGE ----------
+  /* ---------- FULL PAGE ---------- */
   if (level === "full") {
-    // Close any open stage so it doesn't sit underneath the bar.
-    // (Stage module listens for this via router.onChange.)
-
     progress.start();
     progress.set(0.12);
     await nextFrame();
     if (stale()) return;
 
-    const work = (async () => {
-      progress.set(0.35);
+    try {
       await Promise.all([
         state.renderer(next),
         sleep(TIMING.full),
       ]);
       if (stale()) return;
       progress.set(0.9);
-    })();
-
-    try {
-      await work;
     } finally {
       if (token === state.token) {
         await progress.finish();
@@ -251,7 +215,7 @@ async function transition(next) {
     return;
   }
 
-  // ---------- FRAGMENT ----------
+  /* ---------- FRAGMENT ---------- */
   spinner.show(labelFor(next));
 
   try {
@@ -272,16 +236,13 @@ async function transition(next) {
 function pickLevel(prev, next) {
   if (!prev) return next.level;
 
-  // Same route name → only the query changed → fragment.
   if (prev.name === next.name) {
-    // …unless the params changed, which means a real content swap
     const paramsDiffer =
       JSON.stringify(prev.params) !== JSON.stringify(next.params);
     if (paramsDiffer) return next.level;
     return "fragment";
   }
 
-  // Explicit level on the destination.
   return next.level;
 }
 
@@ -300,8 +261,11 @@ function notify(route, meta = {}) {
 
 function labelFor(route) {
   switch (route.name) {
-    case "search":  return "Searching…";
-    default:        return "Loading…";
+    case "search":      return "Searching…";
+    case "collection":  return "Loading collection…";
+    case "category":    return "Loading category…";
+    case "variety":     return "Switching variety…";
+    default:            return "Loading…";
   }
 }
 
