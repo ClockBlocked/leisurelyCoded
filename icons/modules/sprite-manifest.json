@@ -1,6 +1,6 @@
 {
   "$comment": "Icon Forge sprite manifest. Edit labels/blurbs freely. Delete this file to fall back to auto-discovery.",
-  "base": "./fontawesome/sprites/",
+  "base": "../fontawesome/sprites/",
   "varieties": [
 
     { "key": "solid",         "file": "solid.svg",         "label": "Solid",         "blurb": "Bold, filled shapes with maximum punch. The workhorse of the set.", "primary": true },
