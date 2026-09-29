@@ -1,33 +1,18 @@
 /* ============================================================
-   ICON FORGE — js/views/home.js
-   Home page renderer.
-
-   Contents:
-     • Hero (title, blurb, live counts)
-     • Recently viewed strip (from store.recent)
-     • "Browse categories" preview grid
-     • "Compare varieties" preview grid
-     • Full grid of the current variety — PAGINATED
-
-   Also exports shared pieces used by every other view:
-     tile(), sectionBar(), chip(), emptyState()
+   modules/views/home.js
    ============================================================ */
 
-import { el, mount, prettyIconName, $, $$ } from "../utils.js";
+import { el, mount, prettyIconName } from "../utils.js";
 import { registry } from "../sprite.js";
-import { data }     from "../data.js";
-import { store }    from "../store.js";
-import { router }   from "../router.js";
+import { data } from "../data.js";
+import { store } from "../store.js";
+import { router } from "../router.js";
+import { UI } from "../config.js";
 
-/* Rows of tiles rendered per pagination batch. */
-const PAGE_SIZE = 150;
+const PAGE_SIZE = UI.pageSize;
 
-/* ============================================================
-   ENTRY
-   ============================================================ */
 export async function render(container, route) {
   const view = el("div", { cls: "view-home" });
-
   view.append(
     hero(),
     recentStrip(),
@@ -35,37 +20,22 @@ export async function render(container, route) {
     sectionVarieties(),
     sectionCurrentVariety(),
   );
-
   mount(container, view);
   await new Promise((r) => requestAnimationFrame(r));
 }
 
-/* ============================================================
-   HERO
-   ============================================================ */
 function hero() {
   const totals = data.totals();
   const varieties = data.varieties();
-  const loaded = varieties.filter((v) => v.loaded);
-
   return el("section", { cls: "hero" },
-    el("span", { cls: "hero__eyebrow" },
-      el("i"),
-      "Live icon library",
-    ),
-    el("h1", {
-      cls: "hero__title",
-      html: `Every icon, <em>forged</em> into one place.`,
-    }),
-    el("p", {
-      cls: "hero__sub",
-      text:
-        "A fast, searchable Font Awesome gallery. Browse by category, " +
-        "compare varieties side-by-side, and export icons as SVG, JSX " +
-        "or Data URI — all in one keystroke.",
-    }),
+    el("span", { cls: "hero__eyebrow" }, el("i"), "Live icon library"),
+    el("h1", { cls: "hero__title", html: `Every icon, <em>forged</em> into one place.` }),
+    el("p", { cls: "hero__sub", text:
+      "A fast, searchable Font Awesome gallery. Browse by category, " +
+      "compare varieties side-by-side, and export icons as SVG, JSX " +
+      "or Data URI." }),
     el("div", { cls: "hero__stats" },
-      stat(loaded.length ? String(totals.names) : "…", "Icons loaded"),
+      stat(String(totals.names), "Icons loaded"),
       stat(String(varieties.length), "Varieties"),
       stat(String(totals.categories), "Categories"),
       stat(String(store.bookmark.all().length), "Bookmarked"),
@@ -80,45 +50,27 @@ function stat(num, label) {
   );
 }
 
-/* ============================================================
-   RECENTLY VIEWED
-   ============================================================ */
 function recentStrip() {
   const items = store.recent.all();
   if (!items.length) return document.createComment("no-recent");
-
   const resolved = data.resolve(items);
   if (!resolved.length) return document.createComment("no-recent");
 
   const strip = el("div", { cls: "grid", role: "list" });
-  resolved.forEach((entry, i) => {
-    strip.append(tile(entry.variety, entry.name, i));
-  });
+  resolved.forEach((entry, i) => strip.append(tile(entry.variety, entry.name, i)));
 
   return el("section", { cls: "section" },
     sectionBar({
       title: "Recently viewed",
       subtitle: `${resolved.length} icon${resolved.length === 1 ? "" : "s"}`,
-      tools: [
-        chip("Clear", "clear-recent", () => {
-          store.recent.clear();
-          router.refresh();
-        }),
-      ],
+      tools: [chip("Clear", "clear-recent", () => { store.recent.clear(); router.refresh(); })],
     }),
     strip,
   );
 }
 
-/* ============================================================
-   CATEGORY PREVIEW
-   ============================================================ */
 function sectionCategories() {
-  const cats = data
-    .categories()
-    .sort((a, b) => b.count - a.count)
-    .slice(0, 8);
-
+  const cats = data.categories().sort((a, b) => b.count - a.count).slice(0, 8);
   if (!cats.length) return document.createComment("no-categories");
 
   const grid = el("div", { cls: "cardgrid" });
@@ -128,9 +80,7 @@ function sectionCategories() {
     sectionBar({
       title: "Browse categories",
       subtitle: `${data.categories().length} total`,
-      tools: [
-        chip("View all", "all-cats", () => router.go("/categories")),
-      ],
+      tools: [chip("View all", "all-cats", () => router.go("/categories"))],
     }),
     grid,
   );
@@ -142,16 +92,11 @@ function categoryCard(cat, i) {
   const preview = pool.slice(0, 5);
 
   const previewRow = el("div", { cls: "card__preview" },
-    preview.map((name) => {
-      const svg = registry.svgString(variety, name, { size: 20 });
-      return el("span", { html: svg });
-    }),
+    preview.map((name) => el("span", { html: registry.svgString(variety, name, { size: 20 }) }))
   );
 
   return el("button", {
-    cls: "card",
-    type: "button",
-    style: { "--i": i },
+    cls: "card", type: "button", style: { "--i": i },
     attrs: { "aria-label": `Open ${cat.label}` },
     on: { click: () => router.go(`/categories/${cat.key}`) },
   },
@@ -160,7 +105,7 @@ function categoryCard(cat, i) {
       el("span", { cls: "card__count", text: String(cat.count) }),
     ),
     el("h3", { cls: "card__name", text: cat.label }),
-    el("p",  { cls: "card__desc", text: cat.blurb }),
+    el("p", { cls: "card__desc", text: cat.blurb }),
     previewRow,
     el("span", { cls: "card__arrow", html:
       `View <svg viewBox="0 0 24 24" width="12" height="12" fill="none"
@@ -179,17 +124,11 @@ function catIconSvg(iconName) {
   return "";
 }
 
-/* ============================================================
-   VARIETY PREVIEW
-   ============================================================ */
 function sectionVarieties() {
   const varieties = data.varieties();
-  // Show a curated slice — core six plus one or two sharp variants.
   const highlighted = varieties
-    .filter((v) =>
-      ["solid", "regular", "light", "thin", "duotone", "brands",
-       "sharp-solid", "sharp-regular"].includes(v.key)
-    )
+    .filter((v) => ["solid", "regular", "light", "thin", "duotone", "brands",
+      "sharp-solid", "sharp-regular"].includes(v.key))
     .slice(0, 6);
 
   if (!highlighted.length) return document.createComment("no-varieties");
@@ -201,9 +140,7 @@ function sectionVarieties() {
     sectionBar({
       title: "Compare varieties",
       subtitle: `${varieties.length} available`,
-      tools: [
-        chip("View all", "all-vars", () => router.go("/varieties")),
-      ],
+      tools: [chip("View all", "all-vars", () => router.go("/varieties"))],
     }),
     grid,
   );
@@ -215,27 +152,20 @@ function varietyCard(v, i) {
   const preview = pool.slice(0, 5);
 
   const previewRow = el("div", { cls: "card__preview" },
-    preview.map((name) => el("span", {
-      html: registry.svgString(v.key, name, { size: 20 }),
-    })),
+    preview.map((name) => el("span", { html: registry.svgString(v.key, name, { size: 20 }) }))
   );
 
   return el("button", {
-    cls: "card",
-    type: "button",
-    style: { "--i": i },
+    cls: "card", type: "button", style: { "--i": i },
     attrs: { "aria-label": `Browse ${v.key} variety` },
     on: { click: () => router.go(`/varieties/${v.key}`) },
   },
     el("div", { cls: "card__top" },
       el("span", { cls: "card__icon", html: varietyGlyph(v.key) }),
-      el("span", {
-        cls: "card__count",
-        text: loaded ? String(v.count) : "·",
-      }),
+      el("span", { cls: "card__count", text: loaded ? String(v.count) : "·" }),
     ),
     el("h3", { cls: "card__name", text: v.label || prettyVariety(v.key) }),
-    el("p",  { cls: "card__desc", text: v.blurb || varietyBlurb(v.key) }),
+    el("p", { cls: "card__desc", text: v.blurb || varietyBlurb(v.key) }),
     previewRow,
     el("span", { cls: "card__arrow", html:
       `Browse <svg viewBox="0 0 24 24" width="12" height="12" fill="none"
@@ -250,13 +180,13 @@ function prettyVariety(key) {
 
 function varietyBlurb(key) {
   const map = {
-    solid:   "Bold, filled shapes. The workhorse of the set.",
+    solid: "Bold, filled shapes. The workhorse of the set.",
     regular: "Outlined strokes with a lighter touch.",
-    sharp:   "Crisp corners engineered for UI chrome.",
-    light:   "Airy hairlines that whisper.",
-    thin:    "Featherweight strokes for editorial layouts.",
+    sharp: "Crisp corners engineered for UI chrome.",
+    light: "Airy hairlines that whisper.",
+    thin: "Featherweight strokes for editorial layouts.",
     duotone: "Two-tone depth for icons that pop.",
-    brands:  "Logos for social, platforms, and integrations.",
+    brands: "Logos for social, platforms, and integrations.",
   };
   return map[key] || "A distinct visual style.";
 }
@@ -275,49 +205,31 @@ function varietyGlyph(key) {
     stroke="currentColor" aria-hidden="true">${d}</svg>`;
 }
 
-/* ============================================================
-   CURRENT VARIETY — PAGINATED GRID
-   ------------------------------------------------------------
-   Never render more than PAGE_SIZE tiles at once. When the
-   user scrolls near the bottom, load the next batch. This is
-   the single most important fix for the Pro+ crash.
-   ============================================================ */
 function sectionCurrentVariety() {
   const variety = store.variety.current();
   const names = data.varietyNames(variety);
 
   if (!names.length) {
     return el("section", { cls: "section" },
-      emptyState(
-        "No icons in this variety",
-        "The sprite for this variety either failed to load or is empty.",
-      ),
+      emptyState("No icons in this variety",
+        "The sprite for this variety either failed to load or is empty."),
     );
   }
 
   const grid = el("div", { cls: "grid", role: "list" });
   const sentinel = el("div", {
-    cls: "grid-sentinel",
-    attrs: { "aria-hidden": "true" },
+    cls: "grid-sentinel", attrs: { "aria-hidden": "true" },
     style: { height: "1px", marginTop: "24px" },
   });
   const counter = el("span", {
-    cls: "section-bar__sub",
-    style: {
-      "font-size": ".75rem",
-      color: "var(--text-faint)",
-      "font-variant-numeric": "tabular-nums",
-    },
+    style: { "font-size": ".75rem", color: "var(--text-faint)", "font-variant-numeric": "tabular-nums" },
   });
-
   const wrapper = el("div", { cls: "variety-grid-wrap" }, grid, sentinel);
 
   let rendered = 0;
   const total = names.length;
 
-  function updateCounter() {
-    counter.textContent = `Showing ${rendered} of ${total}`;
-  }
+  function updateCounter() { counter.textContent = `Showing ${rendered} of ${total}`; }
 
   function renderMore() {
     const end = Math.min(rendered + PAGE_SIZE, total);
@@ -325,7 +237,6 @@ function sectionCurrentVariety() {
     slice.forEach((name, i) => grid.append(tile(variety, name, rendered + i)));
     rendered = end;
     updateCounter();
-
     if (rendered >= total) {
       observer.disconnect();
       sentinel.remove();
@@ -334,15 +245,10 @@ function sectionCurrentVariety() {
   }
 
   const observer = new IntersectionObserver(
-    (entries) => {
-      for (const e of entries) {
-        if (e.isIntersecting) renderMore();
-      }
-    },
+    (entries) => { for (const e of entries) if (e.isIntersecting) renderMore(); },
     { rootMargin: "600px 0px" }
   );
 
-  // Initial batch.
   renderMore();
   observer.observe(sentinel);
 
@@ -350,22 +256,12 @@ function sectionCurrentVariety() {
     sectionBar({
       title: prettyVariety(variety),
       subtitle: `${total} icon${total === 1 ? "" : "s"}`,
-      tools: [
-        counter,
-        chip("Bookmarks", "view-bm", () => router.go("/bookmarks")),
-      ],
+      tools: [counter, chip("Bookmarks", "view-bm", () => router.go("/bookmarks"))],
     }),
     wrapper,
   );
 }
 
-/* ============================================================
-   SHARED PIECES
-   ------------------------------------------------------------
-   Exported for use by every other view module.
-   ============================================================ */
-
-/** Icon tile — the atomic unit of every grid. */
 export function tile(variety, name, i) {
   const svg = registry.svgString(variety, name, { size: 26 });
   const bookmarked = store.bookmark.has(variety, name);
@@ -387,7 +283,6 @@ export function tile(variety, name, i) {
     </svg>
   `;
 
-  // Cursor-tracking spotlight — cheap pointermove listener.
   node.addEventListener("pointermove", (e) => {
     const r = node.getBoundingClientRect();
     node.style.setProperty("--mx", `${((e.clientX - r.left) / r.width) * 100}%`);
@@ -397,61 +292,37 @@ export function tile(variety, name, i) {
   return node;
 }
 
-/** Section header bar with optional inline tools. */
 export function sectionBar({ title, subtitle, tools = [] }) {
   const left = el("h2", { cls: "section-bar__title" },
-    title,
-    subtitle ? el("small", { text: subtitle }) : null,
-  );
-
-  const right = tools.length
-    ? el("div", { cls: "section-bar__tools" }, tools.filter(Boolean))
-    : null;
-
+    title, subtitle ? el("small", { text: subtitle }) : null);
+  const right = tools.length ? el("div", { cls: "section-bar__tools" }, tools.filter(Boolean)) : null;
   return el("header", { cls: "section-bar" }, left, right);
 }
 
-/** Inline pill chip. */
 export function chip(label, id, onClick) {
   return el("button", {
-    cls: "chip",
-    type: "button",
-    text: label,
-    dataset: id ? { action: id } : {},
-    on: { click: onClick },
+    cls: "chip", type: "button", text: label,
+    dataset: id ? { action: id } : {}, on: { click: onClick },
   });
 }
 
-/** Empty state block. */
 export function emptyState(title, text, cta) {
   return el("div", { cls: "empty" },
     el("span", { cls: "empty__icon", html:
       `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
         stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"
-        aria-hidden="true">
-        <path d="M3 7h18M3 12h18M3 17h10"/>
-      </svg>`,
-    }),
+        aria-hidden="true"><path d="M3 7h18M3 12h18M3 17h10"/></svg>` }),
     el("h3", { cls: "empty__title", text: title }),
-    el("p",  { cls: "empty__text",  text }),
-    cta
-      ? el("button", {
-          cls: "empty__cta",
-          type: "button",
-          on: { click: cta.onClick },
-          html:
-            `${escapeHtml(cta.label)} <svg viewBox="0 0 24 24" width="14" height="14"
-              fill="none" stroke="currentColor" stroke-width="2.2"
-              stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="m9 6 6 6-6 6"/></svg>`,
-        })
-      : null,
+    el("p", { cls: "empty__text", text }),
+    cta ? el("button", {
+      cls: "empty__cta", type: "button", on: { click: cta.onClick },
+      html: `${escapeHtml(cta.label)} <svg viewBox="0 0 24 24" width="14" height="14"
+        fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"
+        stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>`,
+    }) : null,
   );
 }
 
 function escapeHtml(s) {
-  return String(s)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
+  return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
