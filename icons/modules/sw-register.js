@@ -28,7 +28,7 @@ function shouldRegister() {
 
 async function register() {
   try {
-    registration = await navigator.serviceWorker.register("./sw.js", {
+    registration = await navigator.serviceWorker.register("../sw.js", {
       scope: "./",
       updateViaCache: "none",
     });
