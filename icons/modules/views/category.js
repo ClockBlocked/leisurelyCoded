@@ -1,38 +1,26 @@
-
-
-
-
-
 /* ============================================================
-   ICON FORGE — js/views/category.js
-   Single category page — grid of tiles, filtered by the active
-   variety. Switching variety here is a FRAGMENT transition.
+   modules/views/category.js
    ============================================================ */
 
-import { el, mount, prettyIconName, debounce } from "../utils.js";
+import { el, mount, debounce } from "../utils.js";
 import { registry } from "../sprite.js";
-import { data }     from "../data.js";
-import { store }    from "../store.js";
-import { router }   from "../router.js";
-import { tile, emptyState, sectionBar } from "./home.js";
+import { data } from "../data.js";
+import { store } from "../store.js";
+import { router } from "../router.js";
+import { tile, emptyState } from "./home.js";
+import { UI } from "../config.js";
 
-/* ============================================================
-   ENTRY
-   ============================================================ */
+const PAGE_SIZE = UI.pageSize;
+
 export async function render(container, route) {
   const key = route.params?.key;
   const cat = data.category(key);
 
   if (!cat) {
-    mount(container,
-      el("div", { cls: "view-category" },
-        emptyState(
-          "Category not found",
-          `No category is registered under "${key}".`,
-          { label: "Back to categories", onClick: () => router.go("/categories") },
-        ),
-      ),
-    );
+    mount(container, el("div", { cls: "view-category" },
+      emptyState("Category not found", `No category is registered under "${key}".`,
+        { label: "Back to categories", onClick: () => router.go("/categories") }),
+    ));
     return;
   }
 
@@ -41,7 +29,6 @@ export async function render(container, route) {
   const totalNames = cat.names.length;
 
   const view = el("div", { cls: "view-category" });
-
   view.append(
     breadcrumb([
       { label: "Categories", href: "/categories" },
@@ -59,20 +46,16 @@ export async function render(container, route) {
     searchRow(),
     el("div", { id: "category-tiles" }, buildTiles(key, variety, names)),
   );
-
   mount(container, view);
 
   const input = view.querySelector("#tile-filter");
-  const wrap  = view.querySelector("#category-tiles");
+  const wrap = view.querySelector("#category-tiles");
   if (input) {
     const run = debounce(() => {
       const q = input.value.trim().toLowerCase();
-      const filtered = q
-        ? names.filter((n) => n.toLowerCase().includes(q))
-        : names;
+      const filtered = q ? names.filter((n) => n.toLowerCase().includes(q)) : names;
       mount(wrap, buildTiles(key, variety, filtered));
     }, 120);
-
     input.addEventListener("input", run);
     input.addEventListener("keydown", (e) => {
       if (e.key === "Escape") { input.value = ""; run(); }
@@ -80,27 +63,15 @@ export async function render(container, route) {
   }
 }
 
-/* ============================================================
-   PIECES
-   ============================================================ */
 function breadcrumb(items) {
-  const list = el("nav", {
-    cls: "breadcrumb",
-    attrs: { "aria-label": "Breadcrumb", style:
-      "display:flex;gap:8px;font-size:.75rem;color:var(--text-faint);margin-bottom:18px" },
-  });
-
+  const list = el("nav", { cls: "breadcrumb",
+    attrs: { "aria-label": "Breadcrumb",
+      style: "display:flex;gap:8px;font-size:.75rem;color:var(--text-faint);margin-bottom:18px" } });
   items.forEach((item, i) => {
     if (i) list.append(el("span", { text: "/", attrs: { "aria-hidden": "true" } }));
-    if (item.href) {
-      list.append(el("a", {
-        text: item.label,
-        attrs: { href: "#" + item.href },
-        style: { color: "var(--text-dim)" },
-      }));
-    } else {
-      list.append(el("strong", { text: item.label, style: { color: "var(--text)" } }));
-    }
+    if (item.href) list.append(el("a", { text: item.label, attrs: { href: "#" + item.href },
+      style: { color: "var(--text-dim)" } }));
+    else list.append(el("strong", { text: item.label, style: { color: "var(--text)" } }));
   });
   return list;
 }
@@ -131,43 +102,27 @@ function searchRow() {
           const w = el("span", { html:
             `<svg viewBox="0 0 24 24" width="15" height="15" fill="none"
               stroke="currentColor" stroke-width="1.9" stroke-linecap="round"
-              aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.6-3.6"/></svg>`,
-          });
+              aria-hidden="true"><circle cx="11" cy="11" r="7"/>
+              <path d="m20 20-3.6-3.6"/></svg>` });
           return w.firstChild;
         })(),
-        el("input", {
-          attrs: {
-            id: "tile-filter",
-            type: "search",
-            placeholder: "Filter this category…",
-            autocomplete: "off",
-            spellcheck: "false",
-            "aria-label": "Filter icons in this category",
-          },
-        }),
+        el("input", { attrs: { id: "tile-filter", type: "search",
+          placeholder: "Filter this category…", autocomplete: "off",
+          spellcheck: "false", "aria-label": "Filter icons in this category" } }),
       ),
     ),
   );
 }
 
-
-
-const PAGE_SIZE = 150;
-
 function buildTiles(catKey, variety, names) {
   if (!names.length) {
-    return emptyState(
-      "Nothing here yet",
-      `No icons in “${catKey}” match the current variety or filter. ` +
-      `Try switching variety from the top bar.`,
-    );
+    return emptyState("Nothing here yet",
+      `No icons in "${catKey}" match the current variety or filter.`);
   }
 
   const grid = el("div", { cls: "grid", role: "list" });
-  const sentinel = el("div", {
-    attrs: { "aria-hidden": "true" },
-    style: { height: "1px", marginTop: "24px" },
-  });
+  const sentinel = el("div", { attrs: { "aria-hidden": "true" },
+    style: { height: "1px", marginTop: "24px" } });
   const wrapper = el("div", { cls: "variety-grid-wrap" }, grid, sentinel);
 
   let rendered = 0;
@@ -176,27 +131,16 @@ function buildTiles(catKey, variety, names) {
   function renderMore() {
     const end = Math.min(rendered + PAGE_SIZE, total);
     const slice = names.slice(rendered, end);
-    slice.forEach((name, i) =>
-      grid.append(tile(variety, name, rendered + i))
-    );
+    slice.forEach((name, i) => grid.append(tile(variety, name, rendered + i)));
     rendered = end;
-    if (rendered >= total) {
-      observer.disconnect();
-      sentinel.remove();
-    }
+    if (rendered >= total) { observer.disconnect(); sentinel.remove(); }
   }
 
-  renderMore();
-
   const observer = new IntersectionObserver(
-    (entries) => {
-      for (const e of entries) {
-        if (e.isIntersecting) renderMore();
-      }
-    },
-    { rootMargin: "400px 0px" }
+    (entries) => { for (const e of entries) if (e.isIntersecting) renderMore(); },
+    { rootMargin: "600px 0px" }
   );
+  renderMore();
   observer.observe(sentinel);
-
   return wrapper;
 }
