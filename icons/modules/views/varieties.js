@@ -1,51 +1,36 @@
-
-
-
-
-
 /* ============================================================
-   ICON FORGE — js/views/varieties.js
-   Banner-style index of every variety (Solid, Sharp, Duotone…).
-   Each is a big, elegant card showing preview icons.
+   modules/views/varieties.js
    ============================================================ */
 
 import { el, mount } from "../utils.js";
 import { registry } from "../sprite.js";
-import { data }     from "../data.js";
-import { store }    from "../store.js";
-import { router }   from "../router.js";
-import { emptyState } from "./home.js";
+import { data } from "../data.js";
+import { store } from "../store.js";
+import { router } from "../router.js";
+import { registry as reg } from "../sprite.js";
+import { invalidate } from "../data.js";
+import { toast } from "../toast.js";
 
-/* ============================================================
-   ENTRY
-   ============================================================ */
 export async function render(container, route) {
   const varieties = data.varieties();
 
   const view = el("div", { cls: "view-varieties" });
-
   view.append(
     pageHead({
       eyebrow: "Every style",
       title: "Varieties",
-      sub:
-        "Font Awesome ships the same icon family in multiple visual " +
-        "styles. Pick the one that matches your tone — crisp and " +
-        "functional, or soft and decorative.",
+      sub: "Font Awesome ships the same icon family in multiple visual styles.",
       meta: [
-        metaStat(varieties.filter((v) => v.available).length, "Available"),
+        metaStat(varieties.filter((v) => v.loaded).length, "Loaded"),
         metaStat(varieties.length, "Total"),
       ],
     }),
-    el("div", { cls: "variety-grid" }, varieties.map(banner)),
+    el("div", { cls: "variety-grid" }, varieties.map((v, i) => banner(v, i))),
   );
 
   mount(container, view);
 }
 
-/* ============================================================
-   PIECES
-   ============================================================ */
 function pageHead({ eyebrow, title, sub, meta = [] }) {
   return el("header", { cls: "page-head" },
     eyebrow ? el("span", { cls: "page-head__eyebrow", text: eyebrow }) : null,
@@ -60,8 +45,8 @@ function metaStat(num, label) {
 }
 
 function banner(v, i) {
-  const enabled = v.available && v.count > 0;
-  const pool = data.varietyNames(v.key);
+  const enabled = v.available !== false;
+  const pool = v.loaded ? data.varietyNames(v.key) : [];
   const preview = pool.slice(0, 8);
   const isCurrent = store.variety.current() === v.key;
 
@@ -73,22 +58,20 @@ function banner(v, i) {
   );
 
   const node = el("button", {
-    cls:
-      "variety-banner" +
-      (enabled ? "" : " is-disabled") +
-      (isCurrent ? " is-current" : ""),
-    type: "button",
-    style: { "--i": i },
-    dataset: { variety: v.key },
-    attrs: {
-      "aria-label": enabled
-        ? `Browse the ${prettyVariety(v.key)} variety`
-        : `${prettyVariety(v.key)} variety is unavailable`,
-      disabled: enabled ? null : true,
-    },
+    cls: "variety-banner" + (enabled ? "" : " is-disabled") + (isCurrent ? " is-current" : ""),
+    type: "button", style: { "--i": i }, dataset: { variety: v.key },
+    attrs: { "aria-label": enabled ? `Browse the ${prettyVariety(v.key)} variety`
+      : `${prettyVariety(v.key)} is unavailable`,
+      disabled: enabled ? null : true },
     on: {
-      click: () => {
+      click: async () => {
         if (!enabled) return;
+        if (!reg.isLoaded(v.key)) {
+          node.classList.add("is-loading");
+          try { await reg.ensure(v.key); invalidate(); }
+          catch { toast("Couldn't load that variety", { variant: "error" }); return; }
+          finally { node.classList.remove("is-loading"); }
+        }
         store.variety.set(v.key);
         router.go(`/varieties/${v.key}`);
       },
@@ -97,22 +80,18 @@ function banner(v, i) {
     el("div", { cls: "variety-banner__head" },
       el("div", { cls: "variety-banner__title" },
         el("span", { cls: "variety-banner__glyph", html: glyphFor(v.key) }),
-        el("span", { cls: "variety-banner__name", text: prettyVariety(v.key) }),
+        el("span", { cls: "variety-banner__name", text: v.label || prettyVariety(v.key) }),
       ),
       el("span", { cls: "variety-banner__count",
-        text: enabled ? `${v.count} icons` : "unavailable",
-      }),
+        text: enabled ? (v.loaded ? `${v.count} icons` : "not loaded") : "unavailable" }),
     ),
-    el("p", { cls: "variety-banner__blurb", text: blurbFor(v.key) }),
+    el("p", { cls: "variety-banner__blurb", text: v.blurb || blurbFor(v.key) }),
     previewStrip,
     el("span", { cls: "variety-banner__cta", html:
-      enabled
-        ? `Browse variety <svg viewBox="0 0 24 24" width="12" height="12"
-             fill="none" stroke="currentColor" stroke-width="2.4"
-             stroke-linecap="round" stroke-linejoin="round"
-             aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>`
-        : `This style isn't loaded`,
-    }),
+      enabled ? `Browse variety <svg viewBox="0 0 24 24" width="12" height="12"
+        fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"
+        stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>`
+      : `This style isn't loaded` }),
   );
 
   return node;
@@ -124,15 +103,15 @@ function prettyVariety(key) {
 
 function blurbFor(key) {
   const map = {
-    solid:   "Bold, filled shapes with the most visual weight. The workhorse of the set.",
-    regular: "Refined line icons with a lighter, airier feel — perfect for dense UI.",
-    sharp:   "Crisp corners and precise angles, engineered for editor chrome.",
-    light:   "Airy hairlines that whisper rather than shout. Great for editorial.",
-    thin:    "Featherweight strokes. Elegant when scaled large, legible when small.",
-    duotone: "Two-tone depth that makes icons pop off the page.",
-    brands:  "Logos for social platforms, tools, and third-party integrations.",
+    solid: "Bold, filled shapes. The workhorse.",
+    regular: "Refined line icons.",
+    sharp: "Crisp corners for editor chrome.",
+    light: "Airy hairlines that whisper.",
+    thin: "Featherweight strokes.",
+    duotone: "Two-tone depth.",
+    brands: "Logos for social and integrations.",
   };
-  return map[key] || "A distinct visual style within the Font Awesome family.";
+  return map[key] || "A distinct visual style.";
 }
 
 function glyphFor(key) {
