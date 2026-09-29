@@ -29,7 +29,7 @@ function shouldRegister() {
 async function register() {
   try {
     registration = await navigator.serviceWorker.register("../sw.js", {
-      scope: "./",
+      scope: "../",
       updateViaCache: "none",
     });
     log.info("service worker registered:", registration.scope);
