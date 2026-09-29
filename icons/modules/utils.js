@@ -17,23 +17,37 @@ export const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
 /** Create an element with attributes, dataset, styles & children. */
 export function el(tag, opts = {}, ...children) {
   const node = document.createElement(tag);
-  const { attrs = {}, dataset = {}, style = {}, html, text, on = {}, cls } = opts;
 
-  if (cls) node.className = Array.isArray(cls) ? cls.filter(Boolean).join(" ") : cls;
+  // Defensive defaults: null OR undefined both become {}.
+  const safeOpts = opts || {};
+  const attrs   = safeOpts.attrs   || {};
+  const dataset = safeOpts.dataset || {};
+  const style   = safeOpts.style   || {};
+  const on      = safeOpts.on      || {};
+  const { html, text, cls } = safeOpts;
+
+  if (cls) {
+    node.className = Array.isArray(cls)
+      ? cls.filter(Boolean).join(" ")
+      : cls;
+  }
 
   for (const [k, v] of Object.entries(attrs)) {
     if (v === false || v == null) continue;
     if (v === true) node.setAttribute(k, "");
     else node.setAttribute(k, String(v));
   }
+
   for (const [k, v] of Object.entries(dataset)) {
     if (v != null) node.dataset[k] = String(v);
   }
+
   for (const [k, v] of Object.entries(style)) {
     if (v != null) node.style.setProperty(k, String(v));
   }
+
   for (const [evt, fn] of Object.entries(on)) {
-    node.addEventListener(evt, fn);
+    if (typeof fn === "function") node.addEventListener(evt, fn);
   }
 
   if (html != null) node.innerHTML = html;
@@ -41,7 +55,9 @@ export function el(tag, opts = {}, ...children) {
 
   for (const child of children.flat()) {
     if (child == null || child === false) continue;
-    node.append(child instanceof Node ? child : document.createTextNode(String(child)));
+    node.append(
+      child instanceof Node ? child : document.createTextNode(String(child))
+    );
   }
   return node;
 }
