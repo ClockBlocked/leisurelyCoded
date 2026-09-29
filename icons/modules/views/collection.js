@@ -1,53 +1,30 @@
 /* ============================================================
-   ICON FORGE — js/views/collection.js
-   Single collection detail page.
-
-   Features:
-     • Editable name + description
-     • Grid of icons with add / remove controls
-     • "Add icons" mode → opens a lightweight picker drawer
-       that reuses the palette's fuzzy matching
-     • Export / import / duplicate / delete / clear
-     • Bookmark-like empty state when the collection has no icons
+   modules/views/collection.js
    ============================================================ */
 
-import {
-  el, mount, debounce, prettyIconName, download, safeFocus, unique,
-} from "../utils.js";
+import { el, mount, debounce, prettyIconName, download, safeFocus } from "../utils.js";
 import { registry } from "../sprite.js";
-import { data }     from "../data.js";
-import { store }    from "../store.js";
-import { router }   from "../router.js";
-import { toast }    from "../toast.js";
-import {
-  collections,
-  collectionFileName,
-} from "../collections.js";
-import { tile, emptyState, sectionBar } from "./home.js";
-import { openPalette } from "../palette.js";
+import { data } from "../data.js";
+import { store } from "../store.js";
+import { router } from "../router.js";
+import { toast } from "../toast.js";
+import { collections, collectionFileName } from "../collections.js";
+import { tile, emptyState } from "./home.js";
 
-/* ============================================================
-   ENTRY
-   ============================================================ */
 export async function render(container, route) {
   const id = route.params?.id;
   const c = collections.get(id);
 
   if (!c) {
-    mount(container,
-      el("div", { cls: "view-collection" },
-        emptyState(
-          "Collection not found",
-          "That collection may have been deleted, or the link is stale.",
-          { label: "All collections", onClick: () => router.go("/collections") },
-        ),
-      ),
-    );
+    mount(container, el("div", { cls: "view-collection" },
+      emptyState("Collection not found",
+        "That collection may have been deleted, or the link is stale.",
+        { label: "All collections", onClick: () => router.go("/collections") }),
+    ));
     return;
   }
 
   const view = el("div", { cls: "view-collection" });
-
   view.append(
     breadcrumb([
       { label: "Collections", href: "/collections" },
@@ -57,39 +34,21 @@ export async function render(container, route) {
     toolbar(c),
     el("div", { id: "collection-body" }, bodyFor(c)),
   );
-
   mount(container, view);
 
-  // Header edit: rename + description (inline)
   wireHeader(view, c);
-
-  // Toolbar actions
   wireToolbar(view, c);
 }
 
-/* ============================================================
-   PIECES
-   ============================================================ */
 function breadcrumb(items) {
-  const list = el("nav", {
-    cls: "breadcrumb",
-    attrs: {
-      "aria-label": "Breadcrumb",
-      style:
-        "display:flex;gap:8px;font-size:.75rem;color:var(--text-faint);margin-bottom:18px",
-    },
-  });
+  const list = el("nav", { cls: "breadcrumb",
+    attrs: { "aria-label": "Breadcrumb",
+      style: "display:flex;gap:8px;font-size:.75rem;color:var(--text-faint);margin-bottom:18px" } });
   items.forEach((item, i) => {
     if (i) list.append(el("span", { text: "/", attrs: { "aria-hidden": "true" } }));
-    if (item.href) {
-      list.append(el("a", {
-        text: item.label,
-        attrs: { href: "#" + item.href },
-        style: { color: "var(--text-dim)" },
-      }));
-    } else {
-      list.append(el("strong", { text: item.label, style: { color: "var(--text)" } }));
-    }
+    if (item.href) list.append(el("a", { text: item.label, attrs: { href: "#" + item.href },
+      style: { color: "var(--text-dim)" } }));
+    else list.append(el("strong", { text: item.label, style: { color: "var(--text)" } }));
   });
   return list;
 }
@@ -97,27 +56,19 @@ function breadcrumb(items) {
 function header(c) {
   return el("header", { cls: "page-head", dataset: { id: c.id } },
     el("span", { cls: "page-head__eyebrow", text: "Collection" }),
-    el("h1", {
-      cls: "page-head__title",
-      text: c.name,
+    el("h1", { cls: "page-head__title", text: c.name,
       attrs: { title: "Click to rename", "data-role": "name" },
-      style: { cursor: "text" },
-    }),
-    el("p", {
-      cls: "page-head__sub",
-      text: c.description || "Add a description…",
+      style: { cursor: "text" } }),
+    el("p", { cls: "page-head__sub", text: c.description || "Add a description…",
       attrs: { "data-role": "desc" },
-      style: { cursor: "text", opacity: c.description ? "1" : "0.65" },
-    }),
+      style: { cursor: "text", opacity: c.description ? "1" : "0.65" } }),
     el("div", { cls: "page-head__meta" },
       el("span", null,
         el("strong", { text: String(c.items.length), "data-role": "count" }),
-        "icons",
-      ),
+        "icons"),
       el("span", null,
         el("strong", { text: humanDate(c.updatedAt) }),
-        "updated",
-      ),
+        "updated"),
     ),
   );
 }
@@ -132,25 +83,14 @@ function toolbar(c) {
       chip("Import", "import"),
       chip("Clear", "clear", { danger: true }),
       chip("Delete", "delete", { danger: true }),
-      el("input", {
-        attrs: {
-          id: "collection-item-file",
-          type: "file",
-          accept: ".json,application/json",
-          style: "display:none",
-        },
-      }),
+      el("input", { attrs: { id: "collection-item-file", type: "file",
+        accept: ".json,application/json", style: "display:none" } }),
     ),
   );
 }
 
 function chip(label, action, opts = {}) {
-  const b = el("button", {
-    cls: "chip" + (opts.primary ? " chip--primary" : ""),
-    type: "button",
-    text: label,
-    dataset: { action },
-  });
+  const b = el("button", { cls: "chip", type: "button", text: label, dataset: { action } });
   if (opts.primary) {
     b.style.background = "var(--accent)";
     b.style.color = "#fff";
@@ -166,33 +106,22 @@ function chip(label, action, opts = {}) {
 
 function bodyFor(c) {
   if (!c.items.length) {
-    return emptyState(
-      "This collection is empty",
-      "Use “Add icons” to start picking. Icons you add here stay linked to " +
-      "the collection, so you can revisit them any time.",
-      { label: "Add icons", onClick: () => openPalette("") },
-    );
+    return emptyState("This collection is empty",
+      "Use “Add icons” to start picking. Icons you add here stay linked to the collection.",
+      { label: "Add icons", onClick: () => openAddIcons(c.id) });
   }
 
   const grid = el("div", { cls: "grid", role: "list" });
-  c.items.forEach((it, i) => {
-    grid.append(collectionTile(c, it, i));
-  });
+  c.items.forEach((it, i) => grid.append(collectionTile(c, it, i)));
   return grid;
 }
 
-/* ============================================================
-   TILE (with remove action)
-   ============================================================ */
 function collectionTile(c, item, i) {
   const { variety, name } = item;
   const base = tile(variety, name, i);
 
-  // Attach a small remove button so users can unlink without
-  // opening the stage.
   const remove = el("button", {
-    cls: "tile__remove",
-    type: "button",
+    cls: "tile__remove", type: "button",
     attrs: { "aria-label": `Remove ${prettyIconName(name)} from collection` },
     dataset: { nostage: "1" },
     on: {
@@ -213,9 +142,6 @@ function collectionTile(c, item, i) {
   return base;
 }
 
-/* ============================================================
-   HEADER WIRING
-   ============================================================ */
 function wireHeader(view, c) {
   const nameNode = view.querySelector('[data-role="name"]');
   const descNode = view.querySelector('[data-role="desc"]');
@@ -242,16 +168,9 @@ function wireHeader(view, c) {
 function editInline(node, initial, commit) {
   const input = el("input", {
     attrs: { type: "text", value: initial, maxlength: "240" },
-    style: {
-      width: "100%",
-      padding: "4px 8px",
-      "border-radius": "6px",
-      border: "1px solid var(--accent)",
-      background: "var(--surface-hi)",
-      color: "var(--text)",
-      outline: "none",
-      font: "inherit",
-    },
+    style: { width: "100%", padding: "4px 8px", "border-radius": "6px",
+      border: "1px solid var(--accent)", background: "var(--surface-hi)",
+      color: "var(--text)", outline: "none", font: "inherit" },
   });
 
   const parent = node.parentNode;
@@ -271,9 +190,6 @@ function editInline(node, initial, commit) {
   });
 }
 
-/* ============================================================
-   TOOLBAR WIRING
-   ============================================================ */
 function wireToolbar(view, c) {
   const add = view.querySelector('[data-action="add"]');
   const dup = view.querySelector('[data-action="duplicate"]');
@@ -289,7 +205,6 @@ function wireToolbar(view, c) {
   imp?.addEventListener("click", () => fileInput?.click());
   clr?.addEventListener("click", () => clearCollection(c.id));
   del?.addEventListener("click", () => deleteCollection(c.id));
-
   fileInput?.addEventListener("change", (e) => {
     const file = e.target.files?.[0];
     if (file) importItems(c.id, file);
@@ -297,14 +212,6 @@ function wireToolbar(view, c) {
   });
 }
 
-/* ============================================================
-   ADD ICONS DRAWER
-   ------------------------------------------------------------
-   A small inline overlay that lives in the page. Doesn't reuse
-   the palette directly because we want a different interaction
-   (multi-select without leaving the page). But we borrow the
-   fuzzy matching from data.search.
-   ============================================================ */
 let addDrawer = null;
 
 function openAddIcons(collectionId) {
@@ -320,22 +227,13 @@ function openAddIcons(collectionId) {
 
   const input = el("input", {
     cls: "add-drawer__input",
-    attrs: {
-      type: "text",
-      placeholder: "Search icons to add…",
-      autocomplete: "off",
-      spellcheck: "false",
-      "aria-label": "Search icons",
-    },
-    on: {
-      input: debounce(() => refreshResults(), 120),
-    },
+    attrs: { type: "text", placeholder: "Search icons to add…",
+      autocomplete: "off", spellcheck: "false", "aria-label": "Search icons" },
+    on: { input: debounce(() => refreshResults(), 120) },
   });
 
   const closeBtn = el("button", {
-    cls: "add-drawer__close",
-    type: "button",
-    attrs: { "aria-label": "Close" },
+    cls: "add-drawer__close", type: "button", attrs: { "aria-label": "Close" },
     on: { click: close },
     html: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none"
       stroke="currentColor" stroke-width="2" stroke-linecap="round"
@@ -354,24 +252,13 @@ function openAddIcons(collectionId) {
     results,
   );
 
-  overlay.append(
-    el("div", {
-      cls: "add-drawer__scrim",
-      on: { click: close },
-    }),
-    panel,
-  );
+  overlay.append(el("div", { cls: "add-drawer__scrim", on: { click: close } }), panel);
 
   document.body.append(overlay);
-  requestAnimationFrame(() => {
-    overlay.classList.add("is-open");
-    safeFocus(input);
-  });
-
+  requestAnimationFrame(() => { overlay.classList.add("is-open"); safeFocus(input); });
   addDrawer = overlay;
   refreshResults();
 
-  /* ---- helpers ---- */
   function refreshResults() {
     const q = input.value.trim();
     const names = q
@@ -380,8 +267,7 @@ function openAddIcons(collectionId) {
 
     if (!names.length) {
       mount(results, el("div", { cls: "add-drawer__empty" },
-        el("span", { text: "No matches" }),
-      ));
+        el("span", { text: "No matches" })));
       return;
     }
 
@@ -395,9 +281,7 @@ function openAddIcons(collectionId) {
         type: "button",
         attrs: {
           "aria-pressed": already ? "true" : "false",
-          "aria-label": already
-            ? `Already in collection: ${prettyIconName(name)}`
-            : `Add ${prettyIconName(name)}`,
+          "aria-label": already ? `Already in collection: ${prettyIconName(name)}` : `Add ${prettyIconName(name)}`,
           disabled: already ? true : null,
         },
         dataset: { name, variety },
@@ -441,23 +325,16 @@ function openAddIcons(collectionId) {
   }
 }
 
-/** Update the header count without a full rerender (feels snappier). */
 function refreshCountInPage(id) {
   const c = collections.get(id);
   const node = document.querySelector('[data-role="count"]');
   if (node && c) node.textContent = String(c.items.length);
 }
 
-/* ============================================================
-   ACTIONS
-   ============================================================ */
 function duplicateCollection(id) {
   const copy = collections.duplicate(id);
-  if (!copy) {
-    toast("Couldn't duplicate", { variant: "error" });
-    return;
-  }
-  toast(`Duplicated as “${copy.name}”`);
+  if (!copy) { toast("Couldn't duplicate", { variant: "error" }); return; }
+  toast(`Duplicated as "${copy.name}"`);
   router.go(`/collections/${copy.id}`);
 }
 
@@ -467,7 +344,7 @@ function exportCollection(id) {
   const json = collections.exportJson(id);
   if (!json) return;
   download(collectionFileName(c), json, "application/json");
-  toast(`Exported “${c.name}”`);
+  toast(`Exported "${c.name}"`);
 }
 
 async function importItems(id, file) {
@@ -478,12 +355,7 @@ async function importItems(id, file) {
     const items = Array.isArray(payload?.items) ? payload.items : [];
     let added = 0;
     for (const it of items) {
-      if (
-        it &&
-        typeof it.variety === "string" &&
-        typeof it.name === "string" &&
-        registry.has(it.variety, it.name)
-      ) {
+      if (it && typeof it.variety === "string" && typeof it.name === "string" && registry.has(it.variety, it.name)) {
         if (collections.add(id, it.variety, it.name)) added++;
       }
     }
@@ -497,11 +369,8 @@ async function importItems(id, file) {
 function clearCollection(id) {
   const c = collections.get(id);
   if (!c) return;
-  if (!c.items.length) {
-    toast("Already empty");
-    return;
-  }
-  if (!confirm(`Remove all ${c.items.length} icons from “${c.name}”?`)) return;
+  if (!c.items.length) { toast("Already empty"); return; }
+  if (!confirm(`Remove all ${c.items.length} icons from "${c.name}"?`)) return;
   collections.clear(id);
   toast("Collection emptied");
   router.refresh();
@@ -510,15 +379,12 @@ function clearCollection(id) {
 function deleteCollection(id) {
   const c = collections.get(id);
   if (!c) return;
-  if (!confirm(`Delete “${c.name}”? This cannot be undone.`)) return;
+  if (!confirm(`Delete "${c.name}"? This cannot be undone.`)) return;
   collections.remove(id);
   toast("Collection deleted");
   router.go("/collections");
 }
 
-/* ============================================================
-   UTIL
-   ============================================================ */
 function humanDate(ts) {
   const d = new Date(ts);
   const now = Date.now();
