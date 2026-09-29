@@ -96,13 +96,19 @@ async function boot() {
   progress.start();
   progress.set(0.06);
 
-  /* ---------- 3. Load sprites ---------- */
-  await loadSprites((done, total) => {
-    const fraction = 0.06 + (done / Math.max(total, 1)) * 0.74;
-    progress.set(fraction);
+  /* ---------- 3. Load sprites (lazy — one variety only) ---------- */
+  const initialVariety = store.variety.current() || "solid";
+  progress.set(0.15);
+  await loadSprites({
+    initial: initialVariety,
+    onProgress: (done, total) => {
+      // Manifest discovery gives us a count; the actual load
+      // brings us most of the way.
+      const fraction = 0.15 + (done / Math.max(total, 1)) * 0.65;
+      progress.set(fraction);
+    },
   });
-
-  progress.set(0.88);
+  progress.set(0.82);
 
   /* ---------- 4. Build the icon index ---------- */
   buildIndex();
