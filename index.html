@@ -52,17 +52,15 @@
   </head>
 
   <body class="bg-background font-sans text-gray-900 antialiased min-h-screen">
-    <!-- ============================================================
-     TOAST CONTAINER
-     ============================================================ -->
+
+    
+<!-- Toast Container -->
     <div
       id="toastContainer"
       class="fixed top-5 right-5 z-[120] flex flex-col gap-3 w-[min(360px,calc(100vw-2.5rem))] pointer-events-none"
     ></div>
 
-    <!-- ============================================================
-     HEADER
-     ============================================================ -->
+<!-- Sticky Header -->
     <header class="sticky top-0 z-50 glass-panel border-b border-white/60">
       <div
         class="max-w-5xl mx-auto px-5 h-16 flex items-center justify-between"
@@ -102,11 +100,10 @@
       </div>
     </header>
 
-    <!-- ============================================================
-     MAIN
-     ============================================================ -->
+
     <main class="max-w-5xl mx-auto px-5 pt-10 pb-32 space-y-16">
-      <!-- ============================== SECTION 01 ============================== -->
+
+      <!-- Code -->
       <section id="code">
         <div class="flex items-center gap-3 mb-2">
           <span
@@ -266,7 +263,7 @@
         </div>
       </section>
 
-      <!-- ============================== SECTION 02 ============================== -->
+      <!-- Overlays -->
       <section id="overlays">
         <div class="flex items-center gap-3 mb-2">
           <span
@@ -539,7 +536,7 @@
         </div>
       </section>
 
-      <!-- ============================== SECTION 03 ============================== -->
+      <!-- Media -->
       <section id="media">
         <div class="flex items-center gap-3 mb-2">
           <span
@@ -676,7 +673,7 @@
         </div>
       </section>
 
-      <!-- ============================== SECTION 04 ============================== -->
+      <!-- Forms -->
       <section id="forms">
         <div class="flex items-center gap-3 mb-2">
           <span
@@ -998,7 +995,7 @@
         </div>
       </section>
 
-      <!-- ============================== SECTION 05 ============================== -->
+      <!-- Data -->
       <section id="data">
         <div class="flex items-center gap-3 mb-2">
           <span
@@ -1389,7 +1386,7 @@
         </div>
       </section>
 
-      <!-- ============================== SECTION 06 ============================== -->
+      <!-- Feedback -->
       <section id="feedback">
         <div class="flex items-center gap-3 mb-2">
           <span
@@ -1524,13 +1521,12 @@
               </button>
             </div>
           </div>
-        </div>
+        
       </section>
     </main>
 
-    <!-- ============================================================
-     FOOTER
-     ============================================================ -->
+    
+<!-- F O O T E R -->
     <footer class="border-t border-gray-200/70 bg-white/60 backdrop-blur">
       <div
         class="max-w-5xl mx-auto px-5 py-8 flex flex-col sm:flex-row items-center justify-between gap-4"
@@ -1552,15 +1548,19 @@
       </div>
     </footer>
 
-    <!-- ============================================================
-     OVERLAY LAYER
-     ============================================================ -->
+
+
+
+
+
+    
+<!-------------------------------- Modal ------------->
     <div
       id="backdrop"
       class="hidden fixed inset-0 bg-black/45 backdrop-blur-[3px] z-[95] opacity-0 transition-opacity duration-300"
     ></div>
 
-    <!-- Modal: Basic -->
+    <!-- B A S I C -->
     <div
       id="modalBasic"
       class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4"
@@ -1629,7 +1629,7 @@
       </div>
     </div>
 
-    <!-- Modal: Confirm -->
+    <!-- C O N F I R M -->
     <div
       id="modalConfirm"
       class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4"
@@ -1664,7 +1664,11 @@
       </div>
     </div>
 
-    <!-- Sheet: Right (also used for video docking) -->
+
+    
+  
+<!------------------------------- Sheet ------------->
+    <!-- L E F T -->
     <div
       id="sheetRight"
       class="hidden fixed top-0 right-0 h-full w-[min(420px,100vw)] bg-card shadow-pop z-[100] translate-x-full transition-transform duration-300 ease-out flex flex-col"
@@ -1724,7 +1728,8 @@
       </div>
     </div>
 
-    <!-- Sheet: Left -->
+    
+    <!-- R I G H T -->
     <div
       id="sheetLeft"
       class="hidden fixed top-0 left-0 h-full w-[min(320px,85vw)] bg-card shadow-pop z-[100] -translate-x-full transition-transform duration-300 ease-out flex flex-col"
@@ -1785,7 +1790,11 @@
       </div>
     </div>
 
-    <!-- Offcanvas: Bottom (also used for video docking) -->
+
+    
+    
+<!---------------------------- OffCanvas ------------>
+    <!-- B O T T O M -->
     <div
       id="offcanvasBottom"
       class="hidden fixed bottom-0 left-0 right-0 bg-card rounded-t-[28px] shadow-pop z-[100] translate-y-full transition-transform duration-300 ease-out max-h-[85vh] flex flex-col"
@@ -1856,7 +1865,10 @@
       </div>
     </div>
 
-    <!-- Command Palette -->
+
+
+    
+<!------------------------- Command Palette --------->
     <div
       id="commandPalette"
       class="hidden fixed inset-0 z-[110] flex items-start justify-center pt-[12vh] px-4"
@@ -1975,13 +1987,30 @@
       </div>
     </div>
 
-    <!-- Context menu -->
+
+
+    
+<!--------------------------- Context Menu ---------->
     <div
       id="contextMenu"
       class="hidden fixed z-[120] w-56 bg-card rounded-2xl shadow-pop border border-gray-100 p-1.5 fade-up"
     ></div>
 
-<script src="https://clockblocked.github.io/leisurelyCoded/main.js"></script>
+
+
+
+
+
+
+    
+<script src="https://clockblocked.github.io/leisurelyCoded/main.js">
+/**
+*
+*  Primary Script
+*
+**/
+</script>
+
     
   </body>
 </html>
