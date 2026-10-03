@@ -1,0 +1,394 @@
+.app-icon,
+[class*="icon-"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  line-height: 1;
+  width: 1em;
+  height: 1em;
+  fill: currentColor;
+  stroke: currentColor;
+  stroke-width: 0;
+  flex-shrink: 0;
+  backface-visibility: hidden;
+  user-select: none;
+  transition:
+    transform 0.2s ease,
+    opacity 0.2s ease,
+    filter 0.2s ease,
+    color 0.2s ease;
+}
+
+svg.app-icon,
+svg[class*="icon-"] {
+  pointer-events: none;
+}
+
+/* --------------------------------------------------------------------------
+   2. SIZING UTILITIES
+   -------------------------------------------------------------------------- */
+
+.icon-xs {
+  font-size: 0.75rem;
+  width: 0.75rem;
+  height: 0.75rem;
+}
+.icon-sm {
+  font-size: 0.875rem;
+  width: 0.875rem;
+  height: 0.875rem;
+}
+.icon-md {
+  font-size: 1rem;
+  width: 1rem;
+  height: 1rem;
+}
+.icon-lg {
+  font-size: 1.25rem;
+  width: 1.25rem;
+  height: 1.25rem;
+}
+.icon-xl {
+  font-size: 1.5rem;
+  width: 1.5rem;
+  height: 1.5rem;
+}
+.icon-2xl {
+  font-size: 2rem;
+  width: 2rem;
+  height: 2rem;
+}
+.icon-3xl {
+  font-size: 2.5rem;
+  width: 2.5rem;
+  height: 2.5rem;
+}
+.icon-4xl {
+  font-size: 3rem;
+  width: 3rem;
+  height: 3rem;
+}
+.icon-5xl {
+  font-size: 4rem;
+  width: 4rem;
+  height: 4rem;
+}
+
+/* --------------------------------------------------------------------------
+   3. COLOR & THEME STYLES
+   -------------------------------------------------------------------------- */
+
+.icon-primary {
+  color: #3b82f6;
+}
+.icon-secondary {
+  color: #6b7280;
+}
+.icon-success {
+  color: #10b981;
+}
+.icon-warning {
+  color: #f59e0b;
+}
+.icon-danger {
+  color: #ef4444;
+}
+.icon-info {
+  color: #06b6d4;
+}
+.icon-light {
+  color: #f3f4f6;
+}
+.icon-dark {
+  color: #111827;
+}
+.icon-muted {
+  color: #9ca3af;
+}
+
+.icon-gradient-primary {
+  background: linear-gradient(135deg, #2563eb, #7c3aed);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.icon-gradient-sunset {
+  background: linear-gradient(135deg, #f59e0b, #ef4444);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.icon-gradient-emerald {
+  background: linear-gradient(135deg, #059669, #10b981);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.icon-gradient-neon {
+  background: linear-gradient(135deg, #00f2fe, #4facfe);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* --------------------------------------------------------------------------
+   4. DUOTONE & LAYERED EFFECTS
+   -------------------------------------------------------------------------- */
+
+.icon-duotone {
+  --icon-primary-opacity: 1;
+  --icon-secondary-opacity: 0.4;
+}
+.icon-duotone .path-primary {
+  opacity: var(--icon-primary-opacity);
+}
+.icon-duotone .path-secondary {
+  opacity: var(--icon-secondary-opacity);
+}
+.icon-duotone-swap .path-primary {
+  opacity: var(--icon-secondary-opacity);
+}
+.icon-duotone-swap .path-secondary {
+  opacity: var(--icon-primary-opacity);
+}
+
+/* --------------------------------------------------------------------------
+   5. CONTAINERS & BADGES
+   -------------------------------------------------------------------------- */
+
+.icon-box {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  background-color: rgba(229, 231, 235, 0.5);
+}
+.icon-box-rounded {
+  border-radius: 0.5rem;
+}
+.icon-box-circle {
+  border-radius: 9999px;
+}
+
+.icon-box-primary {
+  background-color: rgba(59, 130, 246, 0.15);
+  color: #2563eb;
+}
+.icon-box-success {
+  background-color: rgba(16, 185, 129, 0.15);
+  color: #059669;
+}
+.icon-box-warning {
+  background-color: rgba(245, 158, 11, 0.15);
+  color: #d97706;
+}
+.icon-box-danger {
+  background-color: rgba(239, 68, 68, 0.15);
+  color: #dc2626;
+}
+
+.icon-bordered {
+  border: 2px solid currentColor;
+  padding: 0.35rem;
+  border-radius: 0.375rem;
+}
+.icon-bordered-dashed {
+  border: 2px dashed currentColor;
+  padding: 0.35rem;
+  border-radius: 0.375rem;
+}
+
+/* --------------------------------------------------------------------------
+   6. SHADOWS & GLOWS
+   -------------------------------------------------------------------------- */
+
+.icon-shadow-sm {
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.15));
+}
+.icon-shadow-md {
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.2));
+}
+.icon-shadow-lg {
+  filter: drop-shadow(0 10px 15px rgba(0, 0, 0, 0.25));
+}
+
+.icon-glow-primary {
+  filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.8));
+}
+.icon-glow-success {
+  filter: drop-shadow(0 0 8px rgba(16, 185, 129, 0.8));
+}
+.icon-glow-danger {
+  filter: drop-shadow(0 0 8px rgba(239, 68, 68, 0.8));
+}
+.icon-glow-warning {
+  filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.8));
+}
+
+/* --------------------------------------------------------------------------
+   7. TRANSFORMATIONS & ROTATIONS
+   -------------------------------------------------------------------------- */
+
+.icon-rotate-45 {
+  transform: rotate(45deg);
+}
+.icon-rotate-90 {
+  transform: rotate(90deg);
+}
+.icon-rotate-180 {
+  transform: rotate(180deg);
+}
+.icon-rotate-270 {
+  transform: rotate(270deg);
+}
+
+.icon-flip-x {
+  transform: scaleX(-1);
+}
+.icon-flip-y {
+  transform: scaleY(-1);
+}
+.icon-flip-both {
+  transform: scale(-1, -1);
+}
+
+/* --------------------------------------------------------------------------
+   8. HOVER & INTERACTION EFFECTS
+   -------------------------------------------------------------------------- */
+
+.icon-hover-bounce:hover {
+  transform: translateY(-4px);
+}
+.icon-hover-scale:hover {
+  transform: scale(1.2);
+}
+.icon-hover-shrink:hover {
+  transform: scale(0.85);
+}
+.icon-hover-rotate:hover {
+  transform: rotate(15deg);
+}
+.icon-hover-spin:hover {
+  transform: rotate(360deg);
+  transition: transform 0.6s ease;
+}
+.icon-hover-fade:hover {
+  opacity: 0.6;
+}
+.icon-hover-glow:hover {
+  filter: drop-shadow(0 0 10px currentColor);
+}
+
+/* --------------------------------------------------------------------------
+   9. ANIMATIONS & SPINNERS
+   -------------------------------------------------------------------------- */
+
+@keyframes icon-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes icon-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 0.7;
+  }
+}
+@keyframes icon-bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-25%);
+  }
+}
+@keyframes icon-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20%,
+  60% {
+    transform: translateX(-4px);
+  }
+  40%,
+  80% {
+    transform: translateX(4px);
+  }
+}
+@keyframes icon-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+.icon-spin {
+  animation: icon-spin 1.5s linear infinite;
+}
+.icon-pulse {
+  animation: icon-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+.icon-bounce {
+  animation: icon-bounce 1s infinite;
+}
+.icon-shake {
+  animation: icon-shake 0.5s ease-in-out;
+}
+.icon-float {
+  animation: icon-float 3s ease-in-out infinite;
+}
+
+/* --------------------------------------------------------------------------
+   10. STATE MODIFIERS & ALIGNMENTS
+   -------------------------------------------------------------------------- */
+
+.icon-disabled {
+  opacity: 0.4;
+  pointer-events: none;
+  filter: grayscale(100%);
+}
+.icon-active {
+  color: #2563eb;
+  font-weight: bold;
+}
+.icon-align-top {
+  vertical-align: top;
+}
+.icon-align-middle {
+  vertical-align: middle;
+}
+.icon-align-bottom {
+  vertical-align: bottom;
+}
+
+/* Expanded utilities to ensure standard style system coverage */
+
+.icon-stroke-thin {
+  stroke-width: 1px;
+}
+.icon-stroke-normal {
+  stroke-width: 2px;
+}
+.icon-stroke-thick {
+  stroke-width: 3px;
+}
+
+.icon-glass {
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 0.5rem;
+  padding: 0.5rem;
+}
