@@ -7,7 +7,7 @@ Just another project whose very creation is the pleasant consequence of:
           A.  too much time spent on my phone¹
           B.  endless collection of ideas
           C.  unresolved procrastinating issues-
-              Error [Uh oh ! Did you mean?:  laziness ]
+              0Error [Uh oh ! Did you mean?:  laziness ]
 
 
 
