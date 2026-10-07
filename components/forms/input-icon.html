@@ -1,0 +1,20 @@
+<div style="width:100%;max-width:340px;display:flex;flex-direction:column;gap:14px">
+  <div class="ui-input-wrap">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+    <input class="ui-input" placeholder="Search…">
+  </div>
+  <div class="ui-input-wrap has-trail">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    <input class="ui-input" type="password" value="hunter2">
+    <button class="trail-btn" data-toggle-pw aria-label="Toggle password">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
+    </button>
+  </div>
+</div>
+
+<script>
+root.querySelector('[data-toggle-pw]').addEventListener('click', e => {
+  const input = e.currentTarget.parentElement.querySelector('input');
+  input.type = input.type === 'password' ? 'text' : 'password';
+});
+</script>
