@@ -1,0 +1,34 @@
+<div style="width:100%;max-width:420px" data-wizard>
+  <div class="ui-steps" style="margin-bottom:22px">
+    <div class="ui-step is-active" data-step-ind="1"><span class="ui-step-dot">1</span><span class="ui-step-label">Account</span></div>
+    <div class="ui-step" data-step-ind="2"><span class="ui-step-dot">2</span><span class="ui-step-label">Plan</span></div>
+    <div class="ui-step" data-step-ind="3"><span class="ui-step-dot">3</span><span class="ui-step-label">Done</span></div>
+  </div>
+  <div data-step="1">
+    <div class="ui-field"><label class="ui-label">Full name</label><input class="ui-input" placeholder="Jane Doe"></div>
+    <div class="ui-field"><label class="ui-label">Email</label><input class="ui-input" type="email" placeholder="jane@example.com"></div>
+  </div>
+  <div data-step="2" hidden>
+    <div class="ui-field"><label class="ui-label">Plan</label>
+      <select class="ui-select"><option>Starter</option><option>Pro</option><option>Team</option></select>
+    </div>
+    <div class="ui-field"><label class="ui-label">Card number</label><input class="ui-input" placeholder="4242 4242 4242 4242"></div>
+  </div>
+  <div data-step="3" hidden>
+    <div class="ui-empty" style="padding:0">
+      <div class="ui-empty-ico" style="background:var(--green-soft);color:var(--green);border-color:transparent">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="m5 12 5 5L20 7"/></svg>
+      </div>
+      <h4>You're all set</h4>
+      <p>Your account has been created and your plan is active.</p>
+    </div>
+  </div>
+  <div style="display:flex;gap:8px;margin-top:18px">
+    <button class="ui-btn ui-btn-outline" data-wiz-back style="flex:1">Back</button>
+    <button class="ui-btn ui-btn-primary" data-wiz-next style="flex:1">Continue</button>
+  </div>
+</div>
+
+<script>
+// Auto-wired by Plugins.wizard(root)
+</script>
