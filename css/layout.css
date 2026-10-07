@@ -1,6 +1,11 @@
-/* ============================================================
-   layout.css — the site shell around the components
-   ============================================================ */
+[hidden] {
+   visibility: hidden;
+   opacity: 0;
+   transition: opacity 0.45s ease-out, visibility 0.45s ease-out;
+}
+
+
+
 
 /* ---------------- top bar ---------------- */
 .topbar {
