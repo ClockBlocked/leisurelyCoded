@@ -1,0 +1,12 @@
+<button class="ui-btn ui-btn-primary" data-loading-btn>
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+  Submit order
+</button>
+
+<script>
+const btn = root.querySelector('[data-loading-btn]');
+btn.addEventListener('click', () => {
+  btn.classList.add('is-loading');
+  setTimeout(() => btn.classList.remove('is-loading'), 2000);
+});
+</script>
