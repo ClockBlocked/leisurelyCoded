@@ -355,7 +355,10 @@
     }
 
     if (trigger) trigger.addEventListener('click', open);
-    overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
+       overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
+
+     const closeBtn = $('#cmdClose');
+       if (closeBtn) closeBtn.addEventListener('click', close);
 
     input.addEventListener('input', () => build(input.value));
     input.addEventListener('keydown', e => {
