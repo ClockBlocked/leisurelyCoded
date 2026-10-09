@@ -224,67 +224,66 @@
     $$('.showcase-card').forEach(card => observer.observe(card));
   }
 
-  async function loadPreview(card) {
-    const view = $('[data-view]', card);
-    const comp = card._comp;
-    try {
-      const payload = await window.Loader.fetch(comp.path);
-      card._payload = payload;
-      view.innerHTML = '';
-      window.Loader.inject(view, payload);
-      card.dataset.previewLoaded = 'true';
+async function loadPreview(card) {
+  const view = $('[data-view]', card);
+  const comp = card._comp;
+  try {
+    const payload = await window.Loader.fetch(comp.path);
+    card._payload = payload;
 
-      // Prefill code panels so switching is instant
-      const htmlPre = $('.code-pre[data-code="html"] code', card);
-      const jsPre   = $('.code-pre[data-code="js"] code', card);
-      htmlPre.textContent = payload.html;
-      if (payload.js) {
-        jsPre.textContent = payload.js;
-        $('.code-tab[data-code-tab="js"]', card).hidden = false;
-      }
-    } catch (err) {
-      view.innerHTML = `<p style="color:var(--red);font-size:13px">Failed to load component.</p>`;
-      console.error(err);
+    view.innerHTML = '';
+    window.Loader.inject(view, payload);
+    card.dataset.previewLoaded = 'true';
+
+    // Fill code panels with raw text, THEN apply highlighting.
+    const htmlPre = $('.code-pre[data-code="html"] code', card);
+    htmlPre.textContent = payload.html;
+    window.Highlight.apply(htmlPre, 'html');
+
+    if (payload.js) {
+      const jsPre = $('.code-pre[data-code="js"] code', card);
+      jsPre.textContent = payload.js;
+      window.Highlight.apply(jsPre, 'js');
+      $('.code-tab[data-code-tab="js"]', card).hidden = false;
     }
+  } catch (err) {
+    view.innerHTML = `<p style="color:var(--red);font-size:13px">Failed to load component.</p>`;
+    console.error(err);
   }
+}
 
   /* ---------------- mode switching with spinner ---------------- */
-  async function switchMode(card, newMode) {
-    if (card.dataset.mode === newMode) return;
-    if (card.dataset.switching === 'true') return;
+async function switchMode(card, newMode) {
+  if (card.dataset.mode === newMode) return;
+  if (card.dataset.switching === 'true') return;
 
-    card.dataset.switching = 'true';
+  card.dataset.switching = 'true';
 
-    const loader   = $('[data-loader]', card);
-    const viewPane = $('[data-view]', card);
-    const codePane = $('[data-code]', card);
+  const loader   = $('[data-loader]', card);
+  const viewPane = $('[data-view]', card);
+  const codePane = $('[data-code]', card);
 
-    loader.hidden = false;
+  loader.hidden = false;
 
-    const minWait = 600 + Math.random() * (1750 - 600);
+  const minWait = 600 + Math.random() * (1750 - 600);
 
-    const ensureLoaded = (async () => {
-      if (!card.dataset.previewLoaded) await loadPreview(card);
-    })();
+  const ensureLoaded = (async () => {
+    if (!card.dataset.previewLoaded) await loadPreview(card);
+  })();
 
-    await Promise.all([ensureLoaded, new Promise(r => setTimeout(r, minWait))]);
+  await Promise.all([ensureLoaded, new Promise(r => setTimeout(r, minWait))]);
 
-    if (newMode === 'code') {
-      viewPane.hidden = true;
-      codePane.hidden = false;
-    } else {
-      viewPane.hidden = false;
-      codePane.hidden = true;
-    }
+  viewPane.hidden = newMode !== 'view';
+  codePane.hidden = newMode !== 'code';
 
-    $$('[data-mode-btn]', card).forEach(b => {
-      b.classList.toggle('is-active', b.dataset.modeBtn === newMode);
-    });
+  $$('[data-mode-btn]', card).forEach(b => {
+    b.classList.toggle('is-active', b.dataset.modeBtn === newMode);
+  });
 
-    card.dataset.mode = newMode;
-    loader.hidden = true;
-    card.dataset.switching = 'false';
-  }
+  card.dataset.mode = newMode;
+  loader.hidden = true;
+  card.dataset.switching = 'false';
+}
 
   /* ---------------- viewer ---------------- */
   function openViewer(comp) {
