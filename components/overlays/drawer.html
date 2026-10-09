@@ -1,0 +1,30 @@
+<div style="position:relative;width:100%;min-height:200px;display:flex;align-items:center;justify-content:center" data-drawer-demo>
+  <button class="ui-btn ui-btn-primary" data-drawer-open>Open drawer</button>
+  <div class="ui-drawer-backdrop" data-drawer-backdrop hidden>
+    <div class="ui-drawer">
+      <div class="ui-drawer-head">
+        <strong>Filters</strong>
+        <button class="icon-btn" data-drawer-close aria-label="Close">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="ui-drawer-body">
+        <label class="ui-label">Category</label>
+        <select class="ui-select" style="margin-bottom:14px"><option>All</option><option>Design</option><option>Engineering</option></select>
+        <label class="ui-label">Status</label>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <label class="ui-check"><input type="checkbox" checked><span class="box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"><path d="m5 12 5 5L20 7"/></svg></span><span>Active</span></label>
+          <label class="ui-check"><input type="checkbox"><span class="box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"><path d="m5 12 5 5L20 7"/></svg></span><span>Archived</span></label>
+        </div>
+      </div>
+      <div class="ui-drawer-foot">
+        <button class="ui-btn ui-btn-ghost ui-btn-block" data-drawer-close>Reset</button>
+        <button class="ui-btn ui-btn-primary ui-btn-block" data-drawer-close>Apply</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Auto-wired by Plugins.drawer(root)
+</script>

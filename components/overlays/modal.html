@@ -1,0 +1,24 @@
+<div style="position:relative;width:100%;min-height:200px;display:flex;align-items:center;justify-content:center" data-modal-demo>
+  <button class="ui-btn ui-btn-primary" data-modal-open>Open modal</button>
+  <div class="ui-modal-backdrop" data-modal-backdrop hidden>
+    <div class="ui-modal">
+      <div class="ui-modal-head">
+        <span class="ui-modal-title">Confirm deletion</span>
+        <button class="icon-btn" data-modal-close aria-label="Close">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="ui-modal-body">
+        This action cannot be undone. The project and all of its data will be permanently removed.
+      </div>
+      <div class="ui-modal-foot">
+        <button class="ui-btn ui-btn-ghost" data-modal-close>Cancel</button>
+        <button class="ui-btn ui-btn-danger" data-modal-close>Delete project</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Auto-wired by Plugins.modal(root)
+</script>
