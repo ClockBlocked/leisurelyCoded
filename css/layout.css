@@ -1,3 +1,44 @@
+:root {
+  --tok-comment: #8b949e;
+  --tok-tag:     #7ee787;
+  --tok-attr:    #79c0ff;
+  --tok-string:  #a5d6ff;
+  --tok-keyword: #ff7b72;
+  --tok-number:  #79c0ff;
+  --tok-func:    #d2a8ff;
+  --tok-punct:   #8b949e;
+  --tok-op:      #ff7b72;
+  --tok-entity:  #ffa657;
+}
+
+[data-theme="light"] {
+  --tok-comment: #6e7781;
+  --tok-tag:     #116329;
+  --tok-attr:    #0550ae;
+  --tok-string:  #0a3069;
+  --tok-keyword: #cf222e;
+  --tok-number:  #0550ae;
+  --tok-func:    #8250df;
+  --tok-punct:   #6e7781;
+  --tok-op:      #cf222e;
+  --tok-entity:  #953800;
+}
+
+.code-pre .tok-comment { color: var(--tok-comment); font-style: italic; }
+.code-pre .tok-tag     { color: var(--tok-tag); }
+.code-pre .tok-attr    { color: var(--tok-attr); }
+.code-pre .tok-string  { color: var(--tok-string); }
+.code-pre .tok-keyword { color: var(--tok-keyword); }
+.code-pre .tok-number  { color: var(--tok-number); }
+.code-pre .tok-func    { color: var(--tok-func); }
+.code-pre .tok-punct   { color: var(--tok-punct); }
+.code-pre .tok-op      { color: var(--tok-op); }
+.code-pre .tok-doctype { color: var(--tok-comment); font-style: italic; }
+.code-pre .tok-entity  { color: var(--tok-entity); }
+.code-pre .tok-ident   { color: inherit; }
+
+
+
 [hidden] {
    visibility: hidden;
    opacity: 0;
@@ -745,51 +786,80 @@
   background: var(--accent-soft);
 }
 
+
+/* ============================================================
+   card stage — fixed height, instant view/code swap
+   ============================================================ */
+
 .card-stage {
   position: relative;
+  isolation: isolate;              /* self-contained z-index context */
   margin: 0 14px 14px;
+  height: 400px;                   /* ← fixed. every card same size. */
   border-radius: var(--radius);
   border: 1px solid var(--border-soft);
   background:
     radial-gradient(circle at 1px 1px, var(--border-soft) 1px, transparent 0) 0 0 / 18px 18px,
     var(--surface-2);
   overflow: hidden;
-  min-height: 220px;
 }
 
+/* ---------- panes ---------- */
 .stage-pane {
-  padding: 42px 22px 30px;
+  position: absolute;
+  inset: 0;
+  min-height: 0;
+}
+[hidden].stage-pane { display: none !important; }
+
+.stage-pane.stage-view {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 220px;
+  align-items: safe center;
+  justify-content: safe center;
+  padding: 40px 22px 30px;
+  overflow: auto;
 }
 
-/* code pane needs to fill edge-to-edge */
 .stage-pane.stage-code {
+  display: block;
   padding: 0;
   background: var(--bg);
 }
 [data-theme="light"] .stage-pane.stage-code { background: #f6f8fa; }
+
+/* code container fills the pane top to bottom */
 .stage-pane.stage-code .code-block-container {
+  position: absolute;
+  inset: 0;
   margin: 0;
   border: none;
   border-radius: 0;
-  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.stage-pane.stage-code .code-toolbar {
+  flex: none;
+  padding-left: 108px;             /* clears the mode toggle pill */
+}
+.stage-pane.stage-code .code-pre {
+  flex: 1;
+  min-height: 0;
+  max-height: none;
+  overflow: auto;
 }
 
-/* ---------- mode toggle ---------- */
+/* ---------- mode toggle (overlay, top-left) ---------- */
 .mode-toggle {
   position: absolute;
   top: 9px;
   left: 9px;
-  z-index: 5;
+  z-index: 20;
   display: inline-flex;
   gap: 2px;
   padding: 3px;
-  background: color-mix(in srgb, var(--bg-elev) 82%, transparent);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  background: color-mix(in srgb, var(--bg-elev) 78%, transparent);
+  backdrop-filter: blur(14px) saturate(160%);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
   border: 1px solid var(--border-soft);
   border-radius: 99px;
   box-shadow: var(--shadow-xs);
@@ -801,7 +871,7 @@
   letter-spacing: .02em;
   color: var(--text-3);
   border-radius: 99px;
-  transition: background .18s var(--ease), color .18s var(--ease);
+  transition: background .15s var(--ease), color .15s var(--ease);
 }
 .mode-btn:hover { color: var(--text); }
 .mode-btn.is-active {
@@ -810,28 +880,31 @@
   box-shadow: 0 2px 8px -2px var(--accent-ring);
 }
 
-/* ---------- loader overlay ---------- */
+/* ---------- loader overlay (super blurred) ---------- */
 .stage-loader {
   position: absolute;
   inset: 0;
-  z-index: 10;
+  z-index: 100;                    /* above modals in the preview */
   display: grid;
   place-items: center;
-  background: color-mix(in srgb, var(--bg) 72%, transparent);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  animation: fade-in .18s var(--ease);
+  background: color-mix(in srgb, var(--bg) 42%, transparent);
+  backdrop-filter: blur(28px) saturate(160%);
+  -webkit-backdrop-filter: blur(28px) saturate(160%);
+  animation: fade-in .12s var(--ease);
 }
+[hidden].stage-loader { display: none !important; }
+
 .loader-spinner {
-  width: 34px;
-  height: 34px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
-  border: 3px solid var(--border);
+  border: 3.5px solid color-mix(in srgb, var(--accent) 22%, transparent);
   border-top-color: var(--accent);
   animation: ui-spin .7s linear infinite;
+  box-shadow: 0 0 40px -8px var(--accent-ring);
 }
 
-/* initial preview skeleton */
+/* ---------- initial preview skeleton ---------- */
 .preview-skeleton {
   width: 100%;
   max-width: 240px;
