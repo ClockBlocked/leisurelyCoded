@@ -1,1 +1,78 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Component Viewer — OpenUI</title>
+<link rel="stylesheet" href="../css/core.css">
+<link rel="stylesheet" href="../css/components.css">
+<style>
+  html, body { min-height: 100%; }
+  body {
+    display: grid;
+    place-items: center;
+    padding: 80px 24px 40px;
+    background: var(--bg);
+    margin: 0;
+  }
+  .viewer-bar {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 52px;
+    padding: 0 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: color-mix(in srgb, var(--bg) 82%, transparent);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--border-soft);
+    font-size: 13px;
+  }
+  .viewer-bar strong { color: var(--text); font-weight: 650; }
+  .viewer-bar span { color: var(--text-3); }
+  .viewer-bar .badge-cat {
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    font-size: 10.5px;
+    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    padding: 3px 8px;
+    border-radius: 99px;
+  }
+  .viewer-stage {
+    display: grid;
+    place-items: center;
+    padding: 60px 40px;
+    min-width: min(520px, 90vw);
+    min-height: 280px;
+    border-radius: 20px;
+    border: 1px solid var(--border-soft);
+    background:
+      radial-gradient(circle at 1px 1px, var(--border-soft) 1px, transparent 0) 0 0 / 20px 20px,
+      var(--surface-2);
+    animation: modal-in .35s var(--spring);
+  }
+  .viewer-error {
+    text-align: center;
+    color: var(--text-2);
+    font-size: 14px;
+  }
+</style>
+</head>
+<body>
 
+<div class="viewer-bar">
+  <strong id="vName">Component</strong>
+  <span class="badge-cat" id="vCat"></span>
+</div>
+
+<div class="viewer-stage" id="stage"></div>
+
+<script src="../js/loader.js"></script>
+<script src="../js/plugins.js"></script>
+<script src="../js/viewer.js"></script>
+
+</body>
+</html>
