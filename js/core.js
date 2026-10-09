@@ -1,5 +1,5 @@
 /* ============================================================
-   core.js — site shell: grid, search, theme, command palette
+   core.js — grid, mode toggle, spinner, search, theme, palette
    ============================================================ */
 
 (function () {
@@ -8,13 +8,8 @@
   const $  = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
 
-  /* ---------------- state ---------------- */
-  const state = {
-    query: '',
-    tier: 'all'
-  };
+  const state = { query: '', tier: 'all' };
 
-  /* ---------------- boot ---------------- */
   document.addEventListener('DOMContentLoaded', () => {
     applyStoredTheme();
     buildSidebar();
@@ -24,9 +19,7 @@
     wireSidebar();
     wireThemeToggle();
     wireCommandPalette();
-    wireCollapseAll();
     wireGlobalShortcuts();
-    wireModalButtons();
     wireScrollButtons();
   });
 
@@ -34,16 +27,13 @@
   function applyStoredTheme() {
     let stored = null;
     try { stored = localStorage.getItem('openui-theme'); } catch (e) {}
-
     if (stored === 'light' || stored === 'dark') {
       document.documentElement.dataset.theme = stored;
       return;
     }
-    // default: respect system, fall back to dark
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     document.documentElement.dataset.theme = prefersDark ? 'dark' : 'light';
   }
-
   function wireThemeToggle() {
     const btn = $('#themeToggle');
     if (!btn) return;
@@ -58,82 +48,51 @@
   function buildSidebar() {
     const nav = $('#sidebarNav');
     if (!nav) return;
-
-    const categories = [];
-    const seen = new Map();
+    const byCat = new Map();
     window.UI_REGISTRY.forEach(c => {
-      if (!seen.has(c.category)) {
-        seen.set(c.category, []);
-        categories.push(c.category);
-      }
-      seen.get(c.category).push(c);
+      if (!byCat.has(c.category)) byCat.set(c.category, []);
+      byCat.get(c.category).push(c);
     });
-
     nav.innerHTML = '';
-    categories.forEach(cat => {
+    byCat.forEach((comps, cat) => {
       const group = document.createElement('div');
       group.className = 'sb-group';
-      group.dataset.category = cat;
-
-      const heading = document.createElement('div');
-      heading.className = 'sb-heading';
-      heading.textContent = cat;
-      group.appendChild(heading);
-
+      group.innerHTML = `<div class="sb-heading">${cat}</div>`;
       const list = document.createElement('ul');
       list.className = 'sb-list';
-
-      seen.get(cat).forEach(comp => {
+      comps.forEach(c => {
         const li = document.createElement('li');
-        li.dataset.tier = comp.tier;
-        li.dataset.id = comp.id;
-        const a = document.createElement('a');
-        a.href = '#card-' + comp.id;
-        a.className = 'sb-link';
-        a.innerHTML = `<span>${comp.name}</span>${comp.tier === 'pro' ? '<span class="sb-pro">Pro</span>' : ''}`;
-        li.appendChild(a);
+        li.dataset.tier = c.tier;
+        li.innerHTML = `<a class="sb-link" href="#card-${c.id}">
+          <span>${c.name}</span>${c.tier === 'pro' ? '<span class="sb-pro">Pro</span>' : ''}
+        </a>`;
         list.appendChild(li);
       });
-
       group.appendChild(list);
       nav.appendChild(group);
     });
-
-    // click a link → scroll to card + highlight
     nav.addEventListener('click', e => {
       const a = e.target.closest('.sb-link');
       if (!a) return;
-      const id = a.getAttribute('href').slice(1);
-      const card = document.getElementById(id);
-      if (!card) return;
-      document.querySelectorAll('.sb-link.is-active').forEach(el => el.classList.remove('is-active'));
+      $$('.sb-link.is-active').forEach(el => el.classList.remove('is-active'));
       a.classList.add('is-active');
-      // close mobile drawer
       document.body.classList.remove('sidebar-open');
     });
   }
-
   function wireSidebar() {
-    const toggle = $('#sidebarToggle');
-    const scrim  = $('#sidebarScrim');
-    if (toggle) toggle.addEventListener('click', () => document.body.classList.toggle('sidebar-open'));
-    if (scrim)  scrim.addEventListener('click',  () => document.body.classList.remove('sidebar-open'));
+    $('#sidebarToggle')?.addEventListener('click', () => document.body.classList.toggle('sidebar-open'));
+    $('#sidebarScrim')?.addEventListener('click', () => document.body.classList.remove('sidebar-open'));
   }
 
-  /* ---------------- grid rendering ---------------- */
+  /* ---------------- grid ---------------- */
   function renderGrid() {
     const grid = $('#componentGrid');
     if (!grid) return;
     grid.innerHTML = '';
-
-    filtered().forEach(comp => {
-      grid.appendChild(makeCard(comp));
-    });
-
+    filtered().forEach(c => grid.appendChild(makeCard(c)));
     updateCount();
     updateEmpty();
-    // run plugins against the whole grid once
-    if (window.Plugins) window.Plugins.init(grid);
+    observeCards();
   }
 
   function filtered() {
@@ -141,12 +100,7 @@
     return window.UI_REGISTRY.filter(c => {
       if (state.tier !== 'all' && c.tier !== state.tier) return false;
       if (!q) return true;
-      return (
-        c.name.toLowerCase().includes(q) ||
-        c.category.toLowerCase().includes(q) ||
-        c.description.toLowerCase().includes(q) ||
-        c.id.toLowerCase().includes(q)
-      );
+      return (c.name + ' ' + c.category + ' ' + c.description).toLowerCase().includes(q);
     });
   }
 
@@ -155,10 +109,8 @@
     article.className = 'showcase-card';
     article.id = 'card-' + comp.id;
     article.dataset.tier = comp.tier;
-    article.dataset.category = comp.category;
-
-    const codeText = comp.js ? `${comp.html}\n\n<script>\n${comp.js}\n<\/script>` : comp.html;
-    const escaped = escapeHtml(codeText);
+    article.dataset.mode = 'view';
+    article._comp = comp;
 
     article.innerHTML = `
       <div class="card-head">
@@ -167,83 +119,198 @@
           <h3 class="card-title">${comp.name}</h3>
           <p class="card-desc">${comp.description}</p>
         </div>
-        <span class="card-tier ${comp.tier}">${comp.tier === 'pro' ? 'Pro' : 'Free'}</span>
-      </div>
-
-      <div class="component-preview-area" data-preview>
-        ${comp.html}
-      </div>
-
-      <div class="code-block-container">
-        <div class="code-toolbar">
-          <div class="code-tabs">
-            <button class="code-tab is-active" data-code-tab="html">HTML</button>
-            ${comp.js ? '<button class="code-tab" data-code-tab="js">JS</button>' : ''}
-          </div>
-          <button class="copy-code-btn" data-copy aria-label="Copy code">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
-            <span>Copy</span>
+        <div class="card-head-actions">
+          <button class="icon-btn card-open-btn" data-open-viewer title="Open in new window" aria-label="Open in new window">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5"/>
+            </svg>
           </button>
+          <span class="card-tier ${comp.tier}">${comp.tier === 'pro' ? 'Pro' : 'Free'}</span>
+        </div>
+      </div>
+
+      <div class="card-stage">
+        <div class="mode-toggle" data-mode-toggle>
+          <button class="mode-btn is-active" data-mode-btn="view">View</button>
+          <button class="mode-btn" data-mode-btn="code">Code</button>
         </div>
 
-        <pre class="code-pre" data-code="html"><code>${escaped}</code></pre>
-        ${comp.js ? `<pre class="code-pre" data-code="js" hidden><code>${escapeHtml(comp.js)}</code></pre>` : ''}
+        <div class="stage-pane stage-view" data-view>
+          <div class="preview-skeleton">
+            <div class="ui-skel ui-skel-title"></div>
+            <div class="ui-skel ui-skel-text"></div>
+            <div class="ui-skel ui-skel-text" style="width:60%"></div>
+          </div>
+        </div>
+
+        <div class="stage-pane stage-code" data-code hidden>
+          <div class="code-block-container">
+            <div class="code-toolbar">
+              <div class="code-tabs">
+                <button class="code-tab is-active" data-code-tab="html">HTML</button>
+                <button class="code-tab" data-code-tab="js" hidden>JS</button>
+              </div>
+              <button class="copy-code-btn" data-copy>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+                <span>Copy</span>
+              </button>
+            </div>
+            <pre class="code-pre" data-code="html"><code></code></pre>
+            <pre class="code-pre" data-code="js" hidden><code></code></pre>
+          </div>
+        </div>
+
+        <div class="stage-loader" data-loader hidden>
+          <div class="loader-spinner"></div>
+        </div>
       </div>
     `;
 
-    // code tabs
-    const tabs   = $$('.code-tab', article);
-    const panels = $$('.code-pre', article);
-    tabs.forEach(tab => {
-      tab.addEventListener('click', () => {
-        const name = tab.dataset.codeTab;
-        tabs.forEach(t => t.classList.toggle('is-active', t === tab));
-        panels.forEach(p => p.hidden = p.dataset.code !== name);
-      });
+    // mode toggle
+    const toggle = $('[data-mode-toggle]', article);
+    toggle.addEventListener('click', e => {
+      const btn = e.target.closest('[data-mode-btn]');
+      if (!btn) return;
+      switchMode(article, btn.dataset.modeBtn);
     });
 
-    // copy button
-    const copyBtn = $('[data-copy]', article);
-    copyBtn.addEventListener('click', async () => {
+    // code tabs
+    const tabs = $$('.code-tab', article);
+    const panels = $$('.code-pre', article);
+    tabs.forEach(t => t.addEventListener('click', () => {
+      const name = t.dataset.codeTab;
+      tabs.forEach(x => x.classList.toggle('is-active', x === t));
+      panels.forEach(p => p.hidden = p.dataset.code !== name);
+    }));
+
+    // copy
+    $('[data-copy]', article).addEventListener('click', async e => {
+      const btn = e.currentTarget;
       const activeTab = $('.code-tab.is-active', article);
       const which = activeTab ? activeTab.dataset.codeTab : 'html';
       const panel = $(`.code-pre[data-code="${which}"]`, article);
-      const text = panel ? panel.innerText : comp.html;
-
       try {
-        await navigator.clipboard.writeText(text);
-        copyBtn.classList.add('is-copied');
-        copyBtn.querySelector('span').textContent = 'Copied!';
+        await navigator.clipboard.writeText(panel.innerText);
+        btn.classList.add('is-copied');
+        btn.querySelector('span').textContent = 'Copied!';
         setTimeout(() => {
-          copyBtn.classList.remove('is-copied');
-          copyBtn.querySelector('span').textContent = 'Copy';
+          btn.classList.remove('is-copied');
+          btn.querySelector('span').textContent = 'Copy';
         }, 1600);
-      } catch (err) {
-        copyBtn.querySelector('span').textContent = 'Failed';
-      }
+      } catch {}
+    });
+
+    // open viewer
+    $('[data-open-viewer]', article).addEventListener('click', () => {
+      openViewer(comp);
     });
 
     return article;
   }
 
+  /* ---------------- lazy load previews ---------------- */
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting) return;
+      const card = entry.target;
+      observer.unobserve(card);
+      if (!card.dataset.previewLoaded) {
+        loadPreview(card);
+      }
+    });
+  }, { rootMargin: '250px 0px' });
+
+  function observeCards() {
+    $$('.showcase-card').forEach(card => observer.observe(card));
+  }
+
+  async function loadPreview(card) {
+    const view = $('[data-view]', card);
+    const comp = card._comp;
+    try {
+      const payload = await window.Loader.fetch(comp.path);
+      card._payload = payload;
+      view.innerHTML = '';
+      window.Loader.inject(view, payload);
+      card.dataset.previewLoaded = 'true';
+
+      // Prefill code panels so switching is instant
+      const htmlPre = $('.code-pre[data-code="html"] code', card);
+      const jsPre   = $('.code-pre[data-code="js"] code', card);
+      htmlPre.textContent = payload.html;
+      if (payload.js) {
+        jsPre.textContent = payload.js;
+        $('.code-tab[data-code-tab="js"]', card).hidden = false;
+      }
+    } catch (err) {
+      view.innerHTML = `<p style="color:var(--red);font-size:13px">Failed to load component.</p>`;
+      console.error(err);
+    }
+  }
+
+  /* ---------------- mode switching with spinner ---------------- */
+  async function switchMode(card, newMode) {
+    if (card.dataset.mode === newMode) return;
+    if (card.dataset.switching === 'true') return;
+
+    card.dataset.switching = 'true';
+
+    const loader   = $('[data-loader]', card);
+    const viewPane = $('[data-view]', card);
+    const codePane = $('[data-code]', card);
+
+    loader.hidden = false;
+
+    const minWait = 600 + Math.random() * (1750 - 600);
+
+    const ensureLoaded = (async () => {
+      if (!card.dataset.previewLoaded) await loadPreview(card);
+    })();
+
+    await Promise.all([ensureLoaded, new Promise(r => setTimeout(r, minWait))]);
+
+    if (newMode === 'code') {
+      viewPane.hidden = true;
+      codePane.hidden = false;
+    } else {
+      viewPane.hidden = false;
+      codePane.hidden = true;
+    }
+
+    $$('[data-mode-btn]', card).forEach(b => {
+      b.classList.toggle('is-active', b.dataset.modeBtn === newMode);
+    });
+
+    card.dataset.mode = newMode;
+    loader.hidden = true;
+    card.dataset.switching = 'false';
+  }
+
+  /* ---------------- viewer ---------------- */
+  function openViewer(comp) {
+    const absolute = new URL(comp.path, document.baseURI).href;
+    const qs = new URLSearchParams({
+      src: absolute,
+      name: comp.name,
+      id: comp.id
+    });
+    window.open(`components/viewer.html?${qs}`, '_blank', 'noopener');
+  }
+
+  /* ---------------- counts / empty ---------------- */
   function updateCount() {
     const el = $('#resultCount');
-    if (!el) return;
-    const n = filtered().length;
-    el.textContent = `${n} of ${window.UI_REGISTRY.length}`;
+    if (el) el.textContent = `${filtered().length} of ${window.UI_REGISTRY.length}`;
   }
-
   function updateEmpty() {
     const empty = $('#emptySearch');
-    if (!empty) return;
-    empty.hidden = filtered().length !== 0;
+    if (empty) empty.hidden = filtered().length !== 0;
   }
 
-  /* ---------------- search ---------------- */
+  /* ---------------- search / filter ---------------- */
   function wireSearch() {
     const input = $('#componentSearch');
     if (!input) return;
-
     let t;
     input.addEventListener('input', () => {
       clearTimeout(t);
@@ -253,17 +320,13 @@
         syncHeading();
       }, 90);
     });
-
-    const clear = $('#clearSearch');
-    if (clear) clear.addEventListener('click', () => {
+    $('#clearSearch')?.addEventListener('click', () => {
       input.value = '';
       state.query = '';
       renderGrid();
       syncHeading();
     });
   }
-
-  /* ---------------- tier filter ---------------- */
   function wireTierFilter() {
     const group = $('#tierFilter');
     if (!group) return;
@@ -276,7 +339,6 @@
       syncHeading();
     });
   }
-
   function syncHeading() {
     const h = $('#gridHeading');
     if (!h) return;
@@ -285,20 +347,6 @@
     parts.push('components');
     if (state.query) parts.push(`matching “${state.query}”`);
     h.textContent = parts.join(' ');
-  }
-
-  /* ---------------- collapse all ---------------- */
-  function wireCollapseAll() {
-    const btn = $('#collapseAll');
-    if (!btn) return;
-    let collapsed = false;
-    btn.addEventListener('click', () => {
-      collapsed = !collapsed;
-      $$('.code-block-container').forEach(el => {
-        el.style.display = collapsed ? 'none' : '';
-      });
-      btn.textContent = collapsed ? 'Show code' : 'Collapse code';
-    });
   }
 
   /* ---------------- command palette ---------------- */
@@ -310,27 +358,19 @@
     if (!overlay || !input || !list) return;
 
     let active = 0;
-
     function build(q = '') {
       const query = q.trim().toLowerCase();
       const items = window.UI_REGISTRY.filter(c =>
-        !query ||
-        c.name.toLowerCase().includes(query) ||
-        c.category.toLowerCase().includes(query) ||
-        c.description.toLowerCase().includes(query)
+        !query || (c.name + ' ' + c.category + ' ' + c.description).toLowerCase().includes(query)
       ).slice(0, 40);
-
       list.innerHTML = items.map((c, i) => `
         <li class="cmd-list-item ${i === 0 ? 'is-active' : ''}" data-id="${c.id}">
           <span class="cmd-cat">${c.category}</span>
           <span class="cmd-name">${c.name}</span>
           ${c.tier === 'pro' ? '<span class="sb-pro">Pro</span>' : ''}
-        </li>
-      `).join('') || '<li class="cmd-empty">No matches</li>';
-
+        </li>`).join('') || '<li class="cmd-empty">No matches</li>';
       active = 0;
     }
-
     function open() {
       overlay.hidden = false;
       document.body.classList.add('no-scroll');
@@ -338,12 +378,10 @@
       build('');
       setTimeout(() => input.focus(), 10);
     }
-
     function close() {
       overlay.hidden = true;
       document.body.classList.remove('no-scroll');
     }
-
     function jump(id) {
       close();
       const card = document.getElementById('card-' + id);
@@ -354,12 +392,9 @@
       }
     }
 
-    if (trigger) trigger.addEventListener('click', open);
-       overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
-
-     const closeBtn = $('#cmdClose');
-       if (closeBtn) closeBtn.addEventListener('click', close);
-
+    trigger?.addEventListener('click', open);
+    $('#cmdClose')?.addEventListener('click', close);
+    overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
     input.addEventListener('input', () => build(input.value));
     input.addEventListener('keydown', e => {
       const items = $$('.cmd-list-item', list);
@@ -370,12 +405,10 @@
       items.forEach((el, i) => el.classList.toggle('is-active', i === active));
       items[active].scrollIntoView({ block: 'nearest' });
     });
-
     list.addEventListener('click', e => {
       const item = e.target.closest('.cmd-list-item');
       if (item) jump(item.dataset.id);
     });
-
     document.addEventListener('keydown', e => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
@@ -385,68 +418,22 @@
     });
   }
 
-  /* ---------------- global shortcuts ---------------- */
+  /* ---------------- misc ---------------- */
   function wireGlobalShortcuts() {
     document.addEventListener('keydown', e => {
-      // "/" focuses search
       if (e.key === '/' && !e.metaKey && !e.ctrlKey &&
           document.activeElement.tagName !== 'INPUT' &&
           document.activeElement.tagName !== 'TEXTAREA') {
         e.preventDefault();
-        const input = $('#componentSearch');
-        if (input) input.focus();
+        $('#componentSearch')?.focus();
       }
     });
   }
-
-  /* ---------------- modal buttons in hero ---------------- */
-  function wireModalButtons() {
-    $$('[data-open-modal]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const id = btn.dataset.openModal;
-        const target = document.getElementById(id);
-        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      });
-    });
-  }
-
-  /* ---------------- hero scroll buttons ---------------- */
   function wireScrollButtons() {
     $$('[data-scroll]').forEach(btn => {
       btn.addEventListener('click', () => {
-        const target = document.querySelector(btn.dataset.scroll);
-        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        document.querySelector(btn.dataset.scroll)?.scrollIntoView({ behavior: 'smooth' });
       });
     });
-  }
-
-  /* ---------------- helpers ---------------- */
-  function escapeHtml(str) {
-    return String(str)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#39;');
-  }
-
-  function showToast(message, kind = 'info') {
-    const region = $('#toastRegion');
-    if (!region) return;
-    const el = document.createElement('div');
-    el.className = `ui-toast ui-toast-${kind}`;
-    el.innerHTML = `
-      <span class="ui-toast-ico">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-          <path d="m5 12 5 5L20 7"/>
-        </svg>
-      </span>
-      <div style="flex:1">${escapeHtml(message)}</div>
-    `;
-    region.appendChild(el);
-    setTimeout(() => {
-      el.classList.add('is-leaving');
-      setTimeout(() => el.remove(), 250);
-    }, 2600);
   }
 })();
